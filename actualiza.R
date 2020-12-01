@@ -100,9 +100,10 @@ dd <- vector()
 depto <- vector()
 
 for (departamento in unique(dataMsal$residencia_departamento_id))
-{ depto <- c(depto,departamento)
-fecha <- c(as.Date(fecha),max(dataMsal$fecha))
-dd <- c(dd,get_dias_dupl(dataMsal,max(dataMsal$fecha),7,departamento)[1]) 
+{
+  depto <- c(depto, departamento)
+  fecha <- c(as.Date(fecha), max(dataMsal$fecha))
+  dd <- c(dd, get_dias_dupl(dataMsal, max(dataMsal$fecha), 7, departamento)[1])
 }
 
 diasDuplicacion <- data.frame(residencia_depto_if=depto, fecha=fecha, dias_duplicacion=dd)

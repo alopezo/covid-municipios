@@ -1,13 +1,14 @@
 library(shiny)
-library(shiny)
 library(dplyr)
 library(dygraphs)
 library(xts)
 library(shinydashboard)
 library(dplyr)
+library(leaflet)
+
 
 load("Data/municipios.RData")
-
+load("Mapas/Mapas.RData")
 
 ui <- dashboardPage(                                  
     dashboardHeader(title= "CIIPS - COVID PBA"),
@@ -26,14 +27,19 @@ ui <- dashboardPage(
                            "Defunciones diarias"= 4,
                            "Defunciones diarias (promedio 7 días)"=9,
                            "Defunciones acumuladas"=6
-                       ))
+                       )),
+        
+        hr(),
+        leafletOutput("mapa")
+        
         
     ),
     dashboardBody(
         fluidRow(
             valueBoxOutput("positivos"),
             valueBoxOutput("defunciones"),
-            valueBoxOutput("r")
+            valueBoxOutput("r"),
+            valueBoxOutput("dd")
         ),
         fluidRow(dygraphOutput("grafico1"))
         
@@ -81,7 +87,7 @@ server <- function(input, output, session) {
     output$positivos <- renderValueBox({
         
         valueBox(
-            value= data() %>% select(casos_acumulados),
+            value= data() %>% dplyr::select(casos_acumulados),
             subtitle = paste("Total Positivos al: ",substring(max(data()$fecha),9,10),substring(max(data()$fecha),5,8),substring(max(data()$fecha),1,4),sep="")
         )
     })
@@ -91,7 +97,7 @@ server <- function(input, output, session) {
     output$defunciones <- renderValueBox({
         
         valueBox(
-            value= data() %>% select(muertes_acumuladas),
+            value= data() %>% dplyr::select(muertes_acumuladas),
             subtitle = paste("Total defunciones al: ",substring(max(data()$fecha),9,10),substring(max(data()$fecha),5,8),substring(max(data()$fecha),1,4),sep="")
         )
     })
@@ -101,12 +107,28 @@ server <- function(input, output, session) {
     output$r <- renderValueBox({
         
         valueBox(
-            value= round(data() %>% select(R_semana),2),
+            value= round(data() %>% dplyr::select(R_semana),2),
             subtitle = paste("Indicador R al: ",substring(max(data()$fecha),9,10),substring(max(data()$fecha),5,8),substring(max(data()$fecha),1,4),sep="")
         )
     })
-    
-    
+    #Armo value box con dias dup
+    output$dd <- renderValueBox({
+        print(input$select_depto)
+        valueBox(
+            value= round(diasDuplicacion$dias_duplicacion[min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])],2),
+            subtitle = paste("Días de duplicación al: ",substring(max(data()$fecha),9,10),substring(max(data()$fecha),5,8),substring(max(data()$fecha),1,4),sep="")
+        )
+    })
+
+    #Mapa
+    output$mapa <- renderLeaflet({
+        
+    codigo <- min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])
+    leaflet(subset(Deptos, depto==codigo)) %>%
+            addProviderTiles(providers$CartoDB.Positron) %>%
+            addPolygons(stroke = T, weight=0.3)
+        
+    })
 }
 
 
