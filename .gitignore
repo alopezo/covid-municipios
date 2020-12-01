@@ -1,0 +1,10 @@
+rt_data.Rdata
+.Rproj.user
+Covid19Casos.csv
+.Rhistory
+rsconnect
+.DS_Store
+.Rhistory
+**/*.icloud
+**/casos_covid19.zip
+**/Covid19Casos.csv
