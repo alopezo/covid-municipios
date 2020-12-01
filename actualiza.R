@@ -2,11 +2,11 @@ library(dplyr)
 library(tidyverse)
 library(zoo)
 library(TTR)
+library(EpiEstim)
 
 ##### FIJAR DIRECTORIO DE TRABAJO ####
 #setwd("D:/municipios")
 
-setwd("C:/Users/usuario/Documents/municipios")
 #### DESCARGA DATOS  ####
 urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos.csv'
 download.file(urlMsal, "Covid19Casos.csv")
@@ -92,6 +92,20 @@ dataMsal <- dataMsal %>%
   group_by(residencia_departamento_id) %>% 
   mutate(promedio_casos_semana = runMean(casos, 7),
          promedio_muertes_semana = runMean(muertes, 7))
+
+#### CALCULA DIAS DE DUPLICACION ####
+source("modulos/modulos.R", encoding = "UTF-8")
+fecha <- vector()
+dd <- vector()
+depto <- vector()
+
+for (departamento in unique(dataMsal$residencia_departamento_id))
+{ depto <- c(depto,departamento)
+fecha <- c(as.Date(fecha),max(dataMsal$fecha))
+dd <- c(dd,get_dias_dupl(dataMsal,max(dataMsal$fecha),7,departamento)[1]) 
+}
+
+diasDuplicacion <- data.frame(residencia_depto_if=depto, fecha=fecha, dias_duplicacion=dd)
 
 #### AGREGA NOMBRES DEPTOS ####
 
