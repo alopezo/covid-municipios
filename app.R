@@ -6,7 +6,7 @@ library(xts)
 library(shinydashboard)
 library(dplyr)
 
-load("data/municipios.RData")
+load("Data/municipios.RData")
 
 
 ui <- dashboardPage(                                  
