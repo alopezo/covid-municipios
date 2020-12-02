@@ -5,58 +5,64 @@ library(xts)
 library(shinydashboard)
 library(dplyr)
 library(leaflet)
+library(shinythemes)
 
 
 load("Data/municipios.RData")
 load("Mapas/Mapas.RData")
 
-ui <- dashboardPage(                                  
-    dashboardHeader(title= "CIIPS - COVID PBA"),
-    dashboardSidebar(
-        sidebarMenu(id= "menu",
-        menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-        conditionalPanel(
-            'input.menu== "dashboard"',
-        selectizeInput("select_depto",
-                       "Departamento:",
-                       choices = unique(dataMsal$residencia_departamento_nombre)),
-        selectizeInput("select_var",
-                       "Variable:",
-                       choices = list(
-                           "Casos diarios" = 3,
-                           "Casos diarios (promedio 7 días)"=8,
-                           "Casos acumulados"=5,
-                           "Rt Diario"=7,
-                           "Defunciones diarias"= 4,
-                           "Defunciones diarias (promedio 7 días)"=9,
-                           "Defunciones acumuladas"=6
-                       ))
-        ),
-        menuItem("Mapa", tabName = "mapa", icon= icon("globe-americas")))
-        
-      
-       
-        
-        ),
-    
-    dashboardBody(
-        tabItems(
-            tabItem("dashboard",
-                    fluidRow(
-            valueBoxOutput("positivos"),
-            valueBoxOutput("defunciones"),
-            valueBoxOutput("r"),
-            valueBoxOutput("dd")
-        ),
-        fluidRow(dygraphOutput("grafico1"))
-            ),
-        tabItem("mapa",
-                leafletOutput("mapa")
+ui <- fluidPage(theme = shinytheme("cerulean"),
+                # Application title
+                fluidRow(
+                    column(3, 
+                           tags$a(
+                               img(src="CIPSlogo.png", height = 88, width = 150),
+                               href="https://www.iecs.org.ar/ciips/",
+                               target="_blank"
+                           )
+                    ),
+                    column(9, 
+                           tags$h2("Proyecto COVID Municipios Bonaerenses")
+                    )
+                ),
+                p(align="center","Datos procesados a partir de información anonimizada del Sistema Nacional de Vigilancia en Salud (SNVS - SISA)"),
+                hr(),
+                fluidRow(
+                    column(12, align="center",
+                        selectizeInput("select_depto",
+                                   "Departamento:",
+                                   choices = unique(dataMsal$residencia_departamento_nombre))
+                    ),
+                ),
+                fluidRow(
+                    column(12, align="center",
+                        valueBoxOutput("positivos", width = 3),
+                        valueBoxOutput("defunciones", width = 3),
+                        valueBoxOutput("r", width = 3),
+                        valueBoxOutput("dd", width = 3)
+                    )
+                ),
+                fluidRow(
+                    column(12, align="center",
+                           selectizeInput("select_var",
+                                          "Variable:",
+                                          choices = list(
+                                              "Casos diarios" = 3,
+                                              "Casos diarios (promedio 7 días)"=8,
+                                              "Casos acumulados"=5,
+                                              "Rt Diario"=7,
+                                              "Defunciones diarias"= 4,
+                                              "Defunciones diarias (promedio 7 días)"=9,
+                                              "Defunciones acumuladas"=6
+                                          ))
+                    ),
+                ),
+                fluidRow(
+                    dygraphOutput("grafico1")
+                ),
+                tabItem("mapa",
+                        leafletOutput("mapa")
                 )
-        
-        
-    )
-)
 )
 
 
@@ -99,7 +105,8 @@ server <- function(input, output, session) {
         
         valueBox(
             value= data() %>% dplyr::select(casos_acumulados),
-            subtitle = paste("Total Positivos al: ",substring(max(data()$fecha),9,10),substring(max(data()$fecha),5,8),substring(max(data()$fecha),1,4),sep="")
+            subtitle = paste("Total Positivos al: ",substring(max(data()$fecha),9,10),substring(max(data()$fecha),5,8),substring(max(data()$fecha),1,4),sep=""),
+            color = "green"
         )
     })
     
