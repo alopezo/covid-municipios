@@ -11,6 +11,9 @@ library(shinythemes)
 load("Data/municipios.RData")
 load("Mapas/Mapas.Rdata")
 
+dataMsal<-dataMsal %>% filter(residencia_departamento_id %in% c(63,287,294,301,466,469,505,616,707,742,756,547,784,791,826))
+
+
 ui <- fluidPage(theme = shinytheme("cerulean"),
                 # Application title
                 fluidRow(
