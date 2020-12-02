@@ -9,7 +9,7 @@ library(shinythemes)
 
 
 load("Data/municipios.RData")
-load("Mapas/Mapas.RData")
+load("Mapas/Mapas.Rdata")
 
 ui <- fluidPage(theme = shinytheme("cerulean"),
                 # Application title
@@ -133,7 +133,11 @@ server <- function(input, output, session) {
     output$dd <- renderValueBox({
         print(input$select_depto)
         valueBox(
-            value= round(diasDuplicacion$dias_duplicacion[min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])],2),
+            value= ifelse(
+                round(diasDuplicacion$dias_duplicacion[min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])],2) < 300,
+                round(diasDuplicacion$dias_duplicacion[min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])],2),
+                "+300"
+                ),
             subtitle = paste("Días de duplicación al: ",substring(max(data()$fecha),9,10),substring(max(data()$fecha),5,8),substring(max(data()$fecha),1,4),sep="")
         )
     })
