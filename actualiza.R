@@ -73,6 +73,7 @@ dataMsal <- dataMsal %>% arrange(residencia_departamento_id) %>%
 
 
 #### CALCULA R PROMEDIO ULTIMA SEMANA ####
+
 R_semana <- vector()
 for (depto in unique(dataMsal$residencia_departamento_id))
 {
@@ -113,6 +114,6 @@ diasDuplicacion <- data.frame(residencia_depto_if=depto, fecha=fecha, dias_dupli
 dataMsal <- merge(dataMsal,denom_depto, all.x=TRUE)
 
 ##### GRABA RDATA PARA APP #####
-save(dataMsal, file="Data/municipios.RData") 
+save.image(file="Data/municipios.RData") 
 
 
