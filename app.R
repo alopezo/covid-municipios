@@ -25,10 +25,10 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                            )
                     ),
                     column(9,
-                           fluidRow(align="center",
+                           fluidRow(
                              tags$h2("Proyecto COVID Municipios Bonaerenses")
                            ),
-                           fluidRow(align="center",             
+                           fluidRow(             
                              p("Datos procesados a partir de información anonimizada del Sistema Nacional de Vigilancia en Salud (SNVS - SISA)"),
                            )
                     )
