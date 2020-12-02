@@ -13,7 +13,10 @@ load("Mapas/Mapas.RData")
 ui <- dashboardPage(                                  
     dashboardHeader(title= "CIIPS - COVID PBA"),
     dashboardSidebar(
-        
+        sidebarMenu(id= "menu",
+        menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+        conditionalPanel(
+            'input.menu== "dashboard"',
         selectizeInput("select_depto",
                        "Departamento:",
                        choices = unique(dataMsal$residencia_departamento_nombre)),
@@ -27,25 +30,33 @@ ui <- dashboardPage(
                            "Defunciones diarias"= 4,
                            "Defunciones diarias (promedio 7 días)"=9,
                            "Defunciones acumuladas"=6
-                       )),
+                       ))
+        ),
+        menuItem("Mapa", tabName = "mapa", icon= icon("globe-americas")))
         
-        hr(),
-        leafletOutput("mapa")
+      
+       
         
-        
-    ),
+        ),
+    
     dashboardBody(
-        fluidRow(
+        tabItems(
+            tabItem("dashboard",
+                    fluidRow(
             valueBoxOutput("positivos"),
             valueBoxOutput("defunciones"),
             valueBoxOutput("r"),
             valueBoxOutput("dd")
         ),
         fluidRow(dygraphOutput("grafico1"))
-        
+            ),
+        tabItem("mapa",
+                leafletOutput("mapa")
+                )
         
         
     )
+)
 )
 
 
@@ -133,5 +144,8 @@ server <- function(input, output, session) {
 
 
 
+
 # Run the application 
 shinyApp(ui = ui, server = server)
+
+
