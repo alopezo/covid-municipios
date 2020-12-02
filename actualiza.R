@@ -94,6 +94,21 @@ dataMsal <- dataMsal %>%
   mutate(promedio_casos_semana = runMean(casos, 7),
          promedio_muertes_semana = runMean(muertes, 7))
 
+
+#### CALCULA TOTAL CASOS Y MUERTES ULTIMOS 14 DIAS ####
+
+dataMsal <- dataMsal %>% 
+  group_by(residencia_departamento_id) %>% 
+  mutate(total_casos_14d = runMean(casos, 14)*14,
+         total_muertes_14d = runMean(muertes, 14)*14)
+
+#### CALCULA INCIDENCIA CASOS Y MUERTES ULTIMOS 14 DIAS ####
+load("Data/poblacion.RData")
+for (depto in (pobdeptos$coddep))
+{dataMsal$poblacion_depto[dataMsal$residencia_departamento_id==depto] <- pobdeptos$poblacion[pobdeptos$coddep==depto]}
+dataMsal$incidencia_14d <- dataMsal$total_casos_14d/dataMsal$poblacion_depto*100000
+dataMsal$mortalidad_14d <- dataMsal$total_muertes_14d/dataMsal$poblacion_depto*100000
+
 #### CALCULA DIAS DE DUPLICACION ####
 source("Modulos/modulos.R", encoding = "UTF-8")
 fecha <- vector()

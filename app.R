@@ -60,7 +60,9 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                                               "Rt Diario"=7,
                                               "Defunciones diarias"= 4,
                                               "Defunciones diarias (promedio 7 días)"=9,
-                                              "Defunciones acumuladas"=6
+                                              "Defunciones acumuladas"=6,
+                                              "Casos por 100.000 habitantes (últimos 14 días)"=13,
+                                              "Muertes por 100.000 habitantes (últimos 14 días)."=14
                                           ))
                     ),
                 ),
@@ -85,12 +87,14 @@ server <- function(input, output, session) {
     output$grafico1 <- renderDygraph({
         var <- as.numeric(input$select_var)
         if (var==5) {titulo <- "Casos acumulados"} else
-            if (var==6) {titulo <- "Defunciones acumuladas"} else
-                if (var==7) {titulo <- "Rt Diario"} else
-                    if (var==8) {titulo <- "Casos diarios (promedio 7 días)"} else
-                        if (var==9) {titulo <- "Defunciones diarias (promedio 7 días)"} else
-                            if (var== 3) {titulo <- "Casos diarios"}
-        if(var== 4) {titulo <- "Defunciones diarias"}
+        if (var==6) {titulo <- "Defunciones acumuladas"} else
+        if (var==7) {titulo <- "Rt Diario"} else
+        if (var==8) {titulo <- "Casos diarios (promedio 7 días)"} else
+        if (var==9) {titulo <- "Defunciones diarias (promedio 7 días)"} else
+        if (var== 3) {titulo <- "Casos diarios"}
+        if (var== 4) {titulo <- "Defunciones diarias"}
+        if (var== 13) {titulo <- "Casos por 100.000 habitantes (últimos 14 días)"}
+        if (var== 14) {titulo <- "Muertes por 100.000 habitantes (últimos 14 días)"}
         {NULL}
         
         x <- xts(dataMsal[dataMsal$residencia_departamento_nombre==input$select_depto,var],dataMsal$fecha[dataMsal$residencia_departamento_nombre==input$select_depto])
