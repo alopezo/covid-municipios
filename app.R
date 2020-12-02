@@ -9,23 +9,27 @@ library(shinythemes)
 
 
 load("Data/municipios.RData")
-load("Mapas/Mapas.RData")
+load("Mapas/Mapas.Rdata")
 
 ui <- fluidPage(theme = shinytheme("cerulean"),
                 # Application title
                 fluidRow(
-                    column(3, 
+                    column(3, align="center",
                            tags$a(
                                img(src="CIPSlogo.png", height = 88, width = 150),
                                href="https://www.iecs.org.ar/ciips/",
                                target="_blank"
                            )
                     ),
-                    column(9, 
-                           tags$h2("Proyecto COVID Municipios Bonaerenses")
+                    column(9,
+                           fluidRow(align="center",
+                             tags$h2("Proyecto COVID Municipios Bonaerenses")
+                           ),
+                           fluidRow(align="center",             
+                             p("Datos procesados a partir de información anonimizada del Sistema Nacional de Vigilancia en Salud (SNVS - SISA)"),
+                           )
                     )
                 ),
-                p(align="center","Datos procesados a partir de información anonimizada del Sistema Nacional de Vigilancia en Salud (SNVS - SISA)"),
                 hr(),
                 fluidRow(
                     column(12, align="center",
@@ -87,7 +91,8 @@ server <- function(input, output, session) {
         {NULL}
         
         x <- xts(dataMsal[dataMsal$residencia_departamento_nombre==input$select_depto,var],dataMsal$fecha[dataMsal$residencia_departamento_nombre==input$select_depto])
-        dygraph(x, main = paste0(titulo," - ", input$select_depto))
+        dygraph(x, main = paste0(titulo," - ", input$select_depto)) %>%
+            dySeries("V1", label="Valor día")
         
     })
     
@@ -133,7 +138,11 @@ server <- function(input, output, session) {
     output$dd <- renderValueBox({
         print(input$select_depto)
         valueBox(
-            value= round(diasDuplicacion$dias_duplicacion[min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])],2),
+            value= ifelse(
+                round(diasDuplicacion$dias_duplicacion[min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])],2) < 300,
+                round(diasDuplicacion$dias_duplicacion[min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])],2),
+                "+300"
+                ),
             subtitle = paste("Días de duplicación al: ",substring(max(data()$fecha),9,10),substring(max(data()$fecha),5,8),substring(max(data()$fecha),1,4),sep="")
         )
     })

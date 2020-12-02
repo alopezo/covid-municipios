@@ -95,7 +95,7 @@ dataMsal <- dataMsal %>%
          promedio_muertes_semana = runMean(muertes, 7))
 
 #### CALCULA DIAS DE DUPLICACION ####
-source("modulos/modulos.R", encoding = "UTF-8")
+source("Modulos/modulos.R", encoding = "UTF-8")
 fecha <- vector()
 dd <- vector()
 depto <- vector()
