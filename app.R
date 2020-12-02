@@ -132,8 +132,13 @@ server <- function(input, output, session) {
     #Armo value box con dias dup
     output$dd <- renderValueBox({
         print(input$select_depto)
-        valueBox(
-            value= round(diasDuplicacion$dias_duplicacion[min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])],2),
+      if (round(diasDuplicacion$dias_duplicacion[min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])],2) >=1 &  
+        round(diasDuplicacion$dias_duplicacion[min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])],2) <=365)
+        {dd=round(diasDuplicacion$dias_duplicacion[min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])],2)
+        } else (dd=NA)
+      
+      valueBox(
+            value= dd,
             subtitle = paste("Días de duplicación al: ",substring(max(data()$fecha),9,10),substring(max(data()$fecha),5,8),substring(max(data()$fecha),1,4),sep="")
         )
     })
