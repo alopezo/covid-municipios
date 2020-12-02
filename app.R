@@ -67,10 +67,16 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                     ),
                 ),
                 fluidRow(
-                    dygraphOutput("grafico1")
+                    column(1),
+                    column(10,
+                       dygraphOutput("grafico1")
+                   )
                 ),
-                tabItem("mapa",
-                        leafletOutput("mapa")
+                fluidRow(
+                    column(1),
+                    column(10,
+                       leafletOutput("mapa")
+                    )
                 )
 )
 
