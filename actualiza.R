@@ -117,3 +117,4 @@ dataMsal <- merge(dataMsal,denom_depto, all.x=TRUE)
 save.image(file="Data/municipios.RData") 
 
 
+
