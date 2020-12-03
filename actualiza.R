@@ -15,6 +15,21 @@ download.file(urlMsal, "Covid19Casos.csv")
 dataMsal<-read.csv("Covid19Casos.csv", fileEncoding = "UTF-8")
 dataMsal<-dataMsal %>% filter(clasificacion_resumen=="Confirmado" & residencia_provincia_id==6)
 
+
+##### COMPLETA FECHA DIAGNOSTICO CON OTRAS FECHAS #####
+dataMsal$fecha <- ""
+for (i in 1:nrow(dataMsal))
+  {
+  if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]=="" & dataMsal$fecha_apertura[i]=="") {dataMsal$fecha[i] <- ""} else
+  if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]=="" & dataMsal$fecha_apertura[i]!="") {dataMsal$fecha[i] <- dataMsal$fecha_apertura[i]} else
+  if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]!="") {dataMsal$fecha[i] <- dataMsal$fecha_inicio_sintomas[i]}
+  print(paste0("IMPUTANDO FECHA - COMPLETO: ", round(i/nrow(dataMsal)*100,2)))
+  } 
+
+dataMsal$fecha_diagnostico[dataMsal$fecha_diagnostico==""] <- dataMsal$fecha[dataMsal$fecha_diagnostico==""]
+dataMsal$fecha <- NULL
+
+
 ##### NOMBRES DE PARTIDOS PARA APP #####
 denom_depto <- dataMsal %>% distinct(residencia_departamento_id, residencia_departamento_nombre) %>%
                             arrange(residencia_departamento_id, residencia_departamento_nombre)

@@ -72,10 +72,13 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                        dygraphOutput("grafico1")
                    )
                 ),
+                br(),
                 fluidRow(
                     column(1),
-                    column(10,
-                       leafletOutput("mapa")
+                    column(5,
+                       leafletOutput("mapa1")),
+                    column(5,
+                          leafletOutput("mapa2")
                     )
                 )
 )
@@ -166,10 +169,19 @@ server <- function(input, output, session) {
     })
 
     #Mapa
-    output$mapa <- renderLeaflet({
+    output$mapa1 <- renderLeaflet({
         
     codigo <- min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])
-    leaflet(subset(Deptos, depto==codigo)) %>%
+    leaflet(subset(Deptos, depto==codigo),options = leafletOptions(zoomControl = FALSE)) %>%
+            addProviderTiles(providers$CartoDB.Positron) %>%
+            addPolygons(stroke = T, weight=0.3) %>% 
+            addMarkers(~X1, ~X2, popup = ~as.character(""), label = ~as.character(departamen)) %>% setView(-60.096495787602436, -36.59018032729006, zoom = 5)  
+        
+    })
+    output$mapa2 <- renderLeaflet({
+        
+        codigo <- min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])
+        leaflet(subset(Deptos, depto==codigo),options = leafletOptions(zoomControl = FALSE)) %>% 
             addProviderTiles(providers$CartoDB.Positron) %>%
             addPolygons(stroke = T, weight=0.3)
         
