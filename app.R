@@ -11,6 +11,8 @@ library(shinythemes)
 load("Data/municipios.RData")
 load("Mapas/Mapas.Rdata")
 
+View(dataMsal)
+
 dataMsal<-dataMsal %>% filter(residencia_departamento_id %in% c(63,287,294,301,336,466,469,476,505,616,707,742,756,547,784,791,826))
 
 
@@ -62,7 +64,8 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                                               "Defunciones diarias (promedio 7 días)"=9,
                                               "Defunciones acumuladas"=6,
                                               "Casos por 100.000 habitantes (últimos 14 días)"=13,
-                                              "Muertes por 100.000 habitantes (últimos 14 días)."=14
+                                              "Muertes por 100.000 habitantes (últimos 14 días)."=14,
+                                              "% de cambio casos nuevos ultima semana vs. semana previa"=16
                                           ))
                     ),
                 ),
@@ -104,11 +107,12 @@ server <- function(input, output, session) {
         if (var== 4) {titulo <- "Defunciones diarias"}
         if (var== 13) {titulo <- "Casos por 100.000 habitantes (últimos 14 días)"}
         if (var== 14) {titulo <- "Muertes por 100.000 habitantes (últimos 14 días)"}
+        if (var== 16) {titulo <- "% de cambio casos nuevos ultima semana vs. semana previa"}
         {NULL}
         
         x <- xts(dataMsal[dataMsal$residencia_departamento_nombre==input$select_depto,var],dataMsal$fecha[dataMsal$residencia_departamento_nombre==input$select_depto])
-        dygraph(x, main = paste0(titulo," - ", input$select_depto)) %>%
-            dySeries("V1", label="Valor día")
+        dygraph(x, main = paste0(titulo," - ", input$select_depto)) #%>%
+            #dySeries("V1", label="Valor día")
         
     })
     

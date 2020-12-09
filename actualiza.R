@@ -143,8 +143,26 @@ diasDuplicacion <- data.frame(residencia_depto_if=depto, fecha=fecha, dias_dupli
 
 dataMsal <- merge(dataMsal,denom_depto, all.x=TRUE)
 
+
+##### Agrego el indicador de cambio que compara semana actual contra semana anterior####
+
+column_temp <- c("retraso","cum_rolling7","cum_rolling14")
+
+dataMsal <- dataMsal %>%
+  group_by(residencia_departamento_id) %>%
+  mutate(retraso = lag(casos, n= 7))%>%
+  mutate(cum_rolling7= rollapplyr(casos, width = 7, FUN = sum, partial = TRUE))%>%
+  mutate(cum_rolling14= rollapplyr(retraso, width = 7, FUN = sum, partial = TRUE)) %>%
+  mutate(`% cambio`= round((cum_rolling7-cum_rolling14)*100/cum_rolling7,2)) %>%
+  select(-one_of(column_temp)) %>%
+  ungroup()
+
+
 ##### GRABA RDATA PARA APP #####
 save.image(file="Data/municipios.RData") 
+
+
+
 
 
 
