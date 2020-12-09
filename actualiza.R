@@ -158,11 +158,11 @@ dataMsal <- dataMsal %>%
   mutate(retraso = lag(casos, n= 7))%>%
   mutate(cum_rolling7= rollapplyr(casos, width = 7, FUN = sum, partial = TRUE))%>%
   mutate(cum_rolling14= rollapplyr(retraso, width = 7, FUN = sum, partial = TRUE)) %>%
-  mutate(`% cambio`= round((cum_rolling7-cum_rolling14)*100/cum_rolling7,2)) %>%
+  mutate(`% cambio`= round((cum_rolling7-cum_rolling14)*100/cum_rolling14,2)) %>%
   select(-one_of(column_temp)) %>%
   ungroup()
 
-
+View(dataMsal)
 ##### GRABA RDATA PARA APP #####
 save.image(file="Data/municipios.RData") 
 
