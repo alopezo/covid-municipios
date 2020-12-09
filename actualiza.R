@@ -162,7 +162,7 @@ dataMsal <- dataMsal %>%
   select(-one_of(column_temp)) %>%
   ungroup()
 
-View(dataMsal)
+
 ##### GRABA RDATA PARA APP #####
 save.image(file="Data/municipios.RData") 
 
