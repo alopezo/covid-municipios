@@ -3,6 +3,7 @@ library(tidyverse)
 library(zoo)
 library(TTR)
 library(EpiEstim)
+library(stats)
 
 ##### FIJAR DIRECTORIO DE TRABAJO ####
 #setwd("D:/municipios")
@@ -92,8 +93,12 @@ dataMsal <- dataMsal %>% arrange(residencia_departamento_id) %>%
 R_semana <- vector()
 for (depto in unique(dataMsal$residencia_departamento_id))
 {
+  data <- data.frame(x=dataMsal$casos[dataMsal$residencia_departamento_id == depto])
+  data <- predict(loess(data$x~seq(1,nrow(data))),span=.5)
+  data[data<0] <- 0
+  
   res_parametric_si <-
-    estimate_R(dataMsal$casos[dataMsal$residencia_departamento_id == depto],
+    estimate_R(data,
                method = "parametric_si",
                config = make_config(list(mean_si = 2.6,
                                          std_si = 1.5)))
