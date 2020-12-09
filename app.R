@@ -115,7 +115,7 @@ server <- function(input, output, session) {
         x <- xts(dataMsal[dataMsal$residencia_departamento_nombre==input$select_depto,var],dataMsal$fecha[dataMsal$residencia_departamento_nombre==input$select_depto])
   
         #dygraph(x, main = paste0(titulo," - ", input$select_depto)) %>% dySeries("V1", label="Valor día")
-        dygraph(x)
+        dygraph(x, main = paste0(titulo," - ", input$select_depto)) %>% dySeries(colnames(x), label="Valor día")
     })
     
     
