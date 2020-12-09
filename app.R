@@ -13,7 +13,7 @@ load("Mapas/Mapas.Rdata")
 
 
 
-dataMsal<<-dataMsal %>% filter(residencia_departamento_id %in% c(63,287,294,301,336,466,469,476,505,616,707,742,756,547,784,791,826))
+dataMsal<-dataMsal %>% filter(residencia_departamento_id %in% c(63,287,294,301,336,466,469,476,505,616,707,742,756,547,784,791,826))
 
 
 ui <- fluidPage(theme = shinytheme("cerulean"),
@@ -97,10 +97,9 @@ server <- function(input, output, session) {
     #input=list(select_var=5,select_depto="Avellaneda")
     
     ##### GRAFICOS #####    
+    
     output$grafico1 <- renderDygraph({
-        browser()
-        #input=list(select_var=4)
-        
+        var=as.numeric(input$select_var)
         if (var==5) {titulo <- "Casos acumulados"} else
         if (var==6) {titulo <- "Defunciones acumuladas"} else
         if (var==7) {titulo <- "Rt Diario"} else
@@ -115,10 +114,8 @@ server <- function(input, output, session) {
         
         x <- xts(dataMsal[dataMsal$residencia_departamento_nombre==input$select_depto,var],dataMsal$fecha[dataMsal$residencia_departamento_nombre==input$select_depto])
   
-        dygraph(x, main = paste0(titulo," - ", input$select_depto)) 
-        #%>%
-         #   dySeries("V1", label="Valor día")
-        
+        #dygraph(x, main = paste0(titulo," - ", input$select_depto)) %>% dySeries("V1", label="Valor día")
+        dygraph(x)
     })
     
     
