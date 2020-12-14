@@ -13,7 +13,7 @@ load("Mapas/Mapas.Rdata")
 
 
 
-dataMsal<-dataMsal %>% filter(residencia_departamento_id %in% c(63,287,294,301,336,466,469,476,505,616,651,707,742,756,547,784,791,826))
+dataMsal<-dataMsal %>% filter(residencia_departamento_id %in% c(63,287,294,301,336,466,469,476,505,616,651,700,707,742,756,547,784,791,826))
 
 
 ui <- fluidPage(theme = shinytheme("cerulean"),
