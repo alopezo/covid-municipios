@@ -13,8 +13,8 @@ urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos
 download.file(urlMsal, "Covid19Casos.csv")
 
 #### IMPORTA DATOS ####
-dataMsal<-read.csv("Covid19Casos.csv", fileEncoding = "UTF-8")
-dataMsal<-dataMsal %>% filter(clasificacion_resumen=="Confirmado" & residencia_provincia_id==6)
+dataMsal_c <-read.csv("Covid19Casos.csv", fileEncoding = "UTF-8") #dejo una version completa para testeos y positividad
+dataMsal<-dataMsal_c %>% filter(clasificacion_resumen=="Confirmado" & residencia_provincia_id==6)
 
 
 ##### COMPLETA FECHA DIAGNOSTICO CON OTRAS FECHAS #####
@@ -161,6 +161,32 @@ dataMsal <- dataMsal %>%
   mutate(`% cambio`= round((cum_rolling7-cum_rolling14)*100/cum_rolling14,2)) %>%
   select(-one_of(column_temp)) %>%
   ungroup()
+
+##Genero testeos e indicador de positividad
+
+#Convierto las variables fecha en Date
+
+dataMsal_c$fecha_inicio_sintomas <- as.Date(dataMsal_c$fecha_inicio_sintomas,format = "%Y-%m-%d")
+dataMsal_c$fecha_diagnostico <- as.Date(dataMsal_c$fecha_diagnostico,format = "%Y-%m-%d")
+dataMsal_c$fecha_apertura <- as.Date(dataMsal_c$fecha_apertura,format = "%Y-%m-%d")
+
+#Genero los indicadores
+
+testeosyposit <- dataMsal_c %>%
+  filter(residencia_provincia_id== 6) %>%
+  mutate(fecha= coalesce(fecha_diagnostico,fecha_inicio_sintomas,fecha_apertura))%>%
+  group_by(fecha,clasificacion,residencia_departamento_id)%>%
+  summarise(n= n()) %>%
+ungroup()%>%
+  group_by(residencia_departamento_id,fecha)%>%
+  summarise(testeos= sum(n[grepl("criterio clinico-epidemiológico", clasificacion)== "FALSE"]),
+            conf_lab = sum(n[grepl("confirmado por laboratorio", clasificacion)== "TRUE"]),
+            positividad= round(conf_lab*100/testeos,2)) %>%
+  select(- conf_lab)
+
+
+dataMsal <- dataMsal %>%
+       left_join(testeosyposit, by= c("residencia_departamento_id","fecha"))
 
 
 ##### GRABA RDATA PARA APP #####
