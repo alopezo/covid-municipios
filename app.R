@@ -68,7 +68,8 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                                               "% de cambio casos nuevos ultima semana vs. semana previa"=16,
                                               "Cantidad de testeos (promedio 7 días)"=17,
                                               "Indice de positividad (promedio 7 días)"= 18
-                                          ))
+                                          )),
+                           downloadButton("download", label = "Descargar")
                     ),
                 ),
                 fluidRow(
@@ -128,6 +129,7 @@ server <- function(input, output, session) {
     data <- reactive({
         
         data <- dataMsal %>% filter(residencia_departamento_nombre == input$select_depto & fecha== max(dataMsal$fecha))
+    
     })
     
     #Armo el box con positivos
@@ -197,7 +199,28 @@ server <- function(input, output, session) {
             addPolygons(stroke = T, weight=0.3)
         
     })
+    
+    # reactive para descarga
+    descarga <- reactive({
+      desc <- dataMsal[dataMsal$residencia_departamento_nombre==input$select_depto,c(2,15,as.numeric(input$select_var))]
+      
+      
+    })
+    
+    output$download <- downloadHandler(
+      
+      filename = function() {
+        paste("data-", Sys.Date(), ".csv", sep="")
+      },
+      content = function(file) {
+        write.csv2(descarga(), file, row.names = F)
+      }
+    )
+     
+    
 }
+
+
 
 
 

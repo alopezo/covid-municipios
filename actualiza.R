@@ -94,8 +94,8 @@ R_semana <- vector()
 for (depto in unique(dataMsal$residencia_departamento_id))
 {
   data <- data.frame(x=dataMsal$casos[dataMsal$residencia_departamento_id == depto])
-  data <- predict(loess(data$x~seq(1,nrow(data))),span=.5)
-  data[data<0] <- 0
+  #data <- predict(loess(data$x~seq(1,nrow(data))),span=.5)
+  #data[data<0] <- 0
   
   res_parametric_si <-
     estimate_R(data,
@@ -188,7 +188,7 @@ ungroup()%>%
 
 dataMsal <- dataMsal %>%
        left_join(testeosyposit, by= c("residencia_departamento_id","fecha"))
-
+rm(dataMsal_c)
 #Genero el promedio de los últimos 7 días en testeos y positividad
 
 dataMsal <- dataMsal %>% 
