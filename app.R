@@ -68,8 +68,7 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                                               "% de cambio casos nuevos ultima semana vs. semana previa"=16,
                                               "Cantidad de testeos (promedio 7 días)"=17,
                                               "Indice de positividad (promedio 7 días)"= 18
-                                          )),
-                           downloadButton("download", label = "Descargar")
+                                          ))
                     ),
                 ),
                 fluidRow(
@@ -77,6 +76,12 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                     column(10,
                        dygraphOutput("grafico1")
                    )
+                ),
+                br(),
+                fluidRow(
+                  column(12, align="center",
+                    downloadButton("download", label = "Descargar datos de este gráfico")
+                  )
                 ),
                 br(),
                 fluidRow(
