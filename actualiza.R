@@ -173,7 +173,7 @@ dataMsal_c$fecha_apertura <- as.Date(dataMsal_c$fecha_apertura,format = "%Y-%m-%
 #Genero los indicadores
 
 testeosyposit <- dataMsal_c %>%
-  filter(residencia_provincia_id== 6) %>%
+  filter(residencia_provincia_id== 6 & residencia_departamento_id != 0) %>%
   mutate(fecha= coalesce(fecha_diagnostico,fecha_inicio_sintomas,fecha_apertura))%>%
   group_by(fecha,clasificacion,residencia_departamento_id)%>%
   summarise(n= n()) %>%
@@ -185,8 +185,21 @@ ungroup()%>%
   select(- conf_lab)
 
 
+
 dataMsal <- dataMsal %>%
        left_join(testeosyposit, by= c("residencia_departamento_id","fecha"))
+
+#Genero el promedio de los últimos 7 días en testeos y positividad
+
+dataMsal <- dataMsal %>% 
+       mutate(testeos= case_when(is.na(testeos)== TRUE ~ 0, TRUE ~ as.numeric(testeos)),
+              positividad = case_when(is.na(positividad)== TRUE ~ 0, TRUE ~ as.numeric(positividad)))%>%
+       mutate(testeos_7= round(runMean(testeos,7),2),
+              positividad_7= round(runMean(positividad,7),2)) %>%
+  select(-testeos,-positividad) %>%
+  as.data.frame()
+
+     
 
 
 ##### GRABA RDATA PARA APP #####

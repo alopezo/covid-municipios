@@ -11,7 +11,7 @@ library(shinythemes)
 load("Data/municipios.RData")
 load("Mapas/Mapas.Rdata")
 
-
+View(dataMsal)
 
 dataMsal<-dataMsal %>% filter(residencia_departamento_id %in% c(63,287,294,301,336,466,469,476,505,616,651,700,707,742,756,547,784,791,826))
 
@@ -48,8 +48,8 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                         valueBoxOutput("positivos", width = 3),
                         valueBoxOutput("defunciones", width = 3),
                         valueBoxOutput("r", width = 3),
-                        valueBoxOutput("dd", width = 3),
-                        valueBoxOutput("testeos",width= 3)
+                        valueBoxOutput("dd", width = 3)
+                       
                     )
                 ),
                 fluidRow(
@@ -67,7 +67,8 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                                               "Casos por 100.000 habitantes (últimos 14 días)"=13,
                                               "Muertes por 100.000 habitantes (últimos 14 días)."=14,
                                               "% de cambio casos nuevos ultima semana vs. semana previa"=16,
-                                              "Indice de positividad"= 18
+                                              "Cantidad de testeos (promedio 7 días)"=17,
+                                              "Indice de positividad (promedio 7 días)"= 18
                                           ))
                     ),
                 ),
@@ -112,7 +113,8 @@ server <- function(input, output, session) {
         if (var== 13) {titulo <- "Casos por 100.000 habitantes (últimos 14 días)"}
         if (var== 14) {titulo <- "Muertes por 100.000 habitantes (últimos 14 días)"}
         if (var== 16) {titulo <- "% de cambio casos nuevos ultima semana vs. semana previa"}
-        if (var== 18) {titulo <- "Indice de positividad"}
+        if (var== 17) {titulo <- "Cantidad de testeos (promedio 7 días)"}
+        if (var== 18) {titulo <- "Indice de positividad (promedio 7 días)"}
         {NULL}
         
         x <- xts(dataMsal[dataMsal$residencia_departamento_nombre==input$select_depto,var],dataMsal$fecha[dataMsal$residencia_departamento_nombre==input$select_depto])
@@ -177,16 +179,7 @@ server <- function(input, output, session) {
         )
     })
     
-    #Armo value box con la cantidad de test
     
-    output$testeos <- renderValueBox({
-      valueBox(
-      value= if(is.na(data() %>% dplyr::select(testeos)) == TRUE) {0} else
-        data() %>% dplyr::select(testeos),
-      subtitle = paste("Test realizados el: ",substring(max(data()$fecha),9,10),substring(max(data()$fecha),5,8),substring(max(data()$fecha),1,4),sep=""))
-      
-    })
-
     #Mapa
     output$mapa1 <- renderLeaflet({
         
