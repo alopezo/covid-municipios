@@ -34,8 +34,13 @@ ui <- fluidPage(
                            ),
                            fluidRow(             
                              p("Datos procesados a partir de información anonimizada del Sistema Nacional de Vigilancia en Salud (SNVS - SISA)"),
-                           )
-                    )
+                           ),
+                           fluidRow(column(9, 
+                             p(paste("Datos actualizados al: ",substring(max(dataMsal$fecha),9,10),substring(max(dataMsal$fecha),5,8),substring(max(dataMsal$fecha),1,4),sep="")),
+                             align= "center"
+                           ))
+                    
+                )
                 ),
                 hr(),
                 fluidRow(
@@ -54,6 +59,15 @@ ui <- fluidPage(
                        
                     )
                 ),
+               fluidRow(
+                    column(12, align="center",
+                    valueBoxOutput("tasa", width = 3),
+                    valueBoxOutput("positividad", width = 3),
+                    valueBoxOutput("testeos", width = 3),
+                    valueBoxOutput("poblacion", width = 3)
+             
+      )
+    ),
                 fluidRow(
                     column(12, align="center",
                            selectizeInput("select_var",
@@ -146,7 +160,7 @@ server <- function(input, output, session) {
         
         valueBox(
             value= data() %>% dplyr::select(casos_acumulados),
-            subtitle = paste("Total Positivos al: ",substring(max(data()$fecha),9,10),substring(max(data()$fecha),5,8),substring(max(data()$fecha),1,4),sep=""),
+            subtitle = "Total Positivos",
             color = "green"
         )
     })
@@ -157,7 +171,7 @@ server <- function(input, output, session) {
         
         valueBox(
             value= data() %>% dplyr::select(muertes_acumuladas),
-            subtitle = paste("Total defunciones al: ",substring(max(data()$fecha),9,10),substring(max(data()$fecha),5,8),substring(max(data()$fecha),1,4),sep="")
+            subtitle = "Total defunciones"
         )
     })
     
@@ -167,7 +181,7 @@ server <- function(input, output, session) {
         
         valueBox(
             value= round(data() %>% dplyr::select(R_semana),2),
-            subtitle = paste("Indicador R al: ",substring(max(data()$fecha),9,10),substring(max(data()$fecha),5,8),substring(max(data()$fecha),1,4),sep="")
+            subtitle = "Indicador R"
         )
     })
     #Armo value box con dias dup
@@ -184,11 +198,43 @@ server <- function(input, output, session) {
                ) {">300"}  else {round(diasDuplicacion$dias_duplicacion[min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])],2)}
                 
               ,
-            subtitle = paste("Días de duplicación al: ",substring(max(data()$fecha),9,10),substring(max(data()$fecha),5,8),substring(max(data()$fecha),1,4),sep="")
+            subtitle = "Días de duplicación"
         )
     })
     
+    #armo value box de tasa
     
+    output$tasa <- renderValueBox({
+      valueBox(
+      value= round(data() %>% dplyr::select(incidencia_14d),2),
+      subtitle = "Tasa por 100.000 hab. (últ. 14 días)")
+    })
+    
+    #armo value box de positividad
+    
+    output$positividad <- renderValueBox({
+      valueBox(
+        value= round(data() %>% dplyr::select(positividad_7),2),
+        subtitle = "Indice de positividad (promedio 7 días)")
+    })
+    
+    #armo value box de testeos
+    
+    output$testeos <- renderValueBox({
+      valueBox(
+        value= round(data() %>% dplyr::select(testeos_7),2),
+        subtitle = "Cantidad de testeos (promedio 7 días)")
+    })
+    
+    #armo value box de testeos
+    
+    output$poblacion <- renderValueBox({
+      valueBox(
+        value= pobdeptos %>% filter(nomdep== input$select_depto) %>% dplyr::select(poblacion),
+        subtitle = "Poblacion estimada")
+    })
+    
+
     #Mapa
     output$mapa1 <- renderLeaflet({
         
