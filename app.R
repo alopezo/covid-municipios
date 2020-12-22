@@ -13,7 +13,7 @@ library(shinythemes)
 load("Data/municipios.RData")
 load("Mapas/Mapas.Rdata")
 
-
+# Azul 049
 dataMsal<-dataMsal %>% filter(residencia_departamento_id %in% c(63,287,294,301,336,466,469,476,505,616,651,700,707,742,756,547,784,791,826))
 
 
@@ -263,8 +263,8 @@ server <- function(input, output, session) {
     }
     output$positividad <- renderValueBox({
       valueBox(
-        value= round(data() %>% dplyr::select(positividad_7),2),
-        subtitle = "% de positividad de los tests (últ. 7 días)",
+        value= paste(round(data() %>% dplyr::select(positividad_7),2),"%"),
+        subtitle = "Positividad de los tests (últ. 7 días)",
         color = getPositividadColor(round(data() %>% dplyr::select(positividad_7),2))
       )
     })
@@ -301,8 +301,8 @@ server <- function(input, output, session) {
     }
     output$variacion_casos <- renderValueBox({
       valueBox(
-        value= round(data() %>% dplyr::select(`% cambio`),2),
-        subtitle = "Variación porcentual a 7 días",
+        value= paste(round(data() %>% dplyr::select(`% cambio`),2),"%"),
+        subtitle = "Variación a 7 días",
         color = getVariacionPorcentualColor(round(data() %>% dplyr::select(`% cambio`),2))
       )
     })
