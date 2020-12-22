@@ -21,10 +21,10 @@ ui <- fluidPage(
     theme = shinytheme("cerulean"),
     tags$head(HTML('<link rel="icon", href="ISO-IECS.png", type="image/png" />')),
     titlePanel(windowTitle = "COVID Municipios", title = ""),
-    tags$style(".small-box.bg-yellow { background-color: #fff39c !important; color: #000000 !important; border: 2px solid; border-radius: 25px;}"),
-    tags$style(".small-box.bg-green { background-color: #a5ff9c !important; color: #000000 !important; border: 2px solid; border-radius: 25px;}"),
-    tags$style(".small-box.bg-red { background-color: #ff9c9c !important; color: #000000 !important; border: 2px solid; border-radius: 25px;}"),
-    tags$style(".small-box.bg-black { background-color: #ffffff !important; color: #000000 !important; border: 2px solid; border-radius: 25px;}"),
+    tags$style(".small-box.bg-yellow { background-color: #fff39c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
+    tags$style(".small-box.bg-green { background-color: #a5ff9c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
+    tags$style(".small-box.bg-red { background-color: #ff9c9c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
+    tags$style(".small-box.bg-black { background-color: #ffffff !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
                 # Application title
                 fluidRow(
                     column(3, align="center",
