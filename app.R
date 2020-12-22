@@ -117,7 +117,18 @@ ui <- fluidPage(
                     column(5,
                           leafletOutput("mapa2")
                     )
-                )
+                ),
+                br(),
+                hr(),
+                fluidRow( class = "text-center",
+                  p(style = "margin-bottom: 2px; font-size: 12px;  color: #67c97c;", 
+                    HTML(paste0("<i>Esta herramienta fue desarrollada por el <a href=\"https://www.iecs.org.ar/ciips/\" target=\"_blank\">CIIPS</a> &copy;2020.
+                        <br>Contacto:</i> <a href=\"mailto:ciips@iecs.org.ar?
+                        subject='Modelo COVID-19'\">ciips@iecs.org.ar</a>")
+                       )
+                  )
+                ),
+                br()
 )
 
 
@@ -302,7 +313,7 @@ server <- function(input, output, session) {
     output$variacion_casos <- renderValueBox({
       valueBox(
         value= paste(round(data() %>% dplyr::select(`% cambio`),2),"%"),
-        subtitle = "Variación a 7 días",
+        subtitle = "Variación de casos a 7 días",
         color = getVariacionPorcentualColor(round(data() %>% dplyr::select(`% cambio`),2))
       )
     })
