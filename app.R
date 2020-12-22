@@ -8,6 +8,8 @@ library(leaflet)
 library(shinythemes)
 
 
+
+
 load("Data/municipios.RData")
 load("Mapas/Mapas.Rdata")
 
@@ -52,19 +54,23 @@ ui <- fluidPage(
                 ),
                 fluidRow(
                     column(12, align="center",
+                        valueBoxOutput("poblacion", width = 3),
                         valueBoxOutput("positivos", width = 3),
                         valueBoxOutput("defunciones", width = 3),
-                        valueBoxOutput("r", width = 3),
-                        valueBoxOutput("dd", width = 3)
+                        valueBoxOutput("testeos", width = 3)
                        
+                        
+                   
                     )
                 ),
                fluidRow(
                     column(12, align="center",
                     valueBoxOutput("tasa", width = 3),
-                    valueBoxOutput("positividad", width = 3),
-                    valueBoxOutput("testeos", width = 3),
-                    valueBoxOutput("poblacion", width = 3)
+                    valueBoxOutput("r", width = 3),
+                    valueBoxOutput("variacion_casos", width = 3),
+                    valueBoxOutput("positividad", width = 3)
+                   
+
              
       )
     ),
@@ -154,25 +160,28 @@ server <- function(input, output, session) {
     
     })
     
+    
     #Armo el box con positivos
     
     output$positivos <- renderValueBox({
+      
+      valueBox(
+        value= data() %>% dplyr::select(casos_acumulados),
+        subtitle = "Total Positivos",
         
-        valueBox(
-            value= data() %>% dplyr::select(casos_acumulados),
-            subtitle = "Total Positivos",
-            color = "green"
-        )
+      )
+      
     })
+    
     
     #Armo value box defunciones
     
     output$defunciones <- renderValueBox({
-        
-        valueBox(
-            value= data() %>% dplyr::select(muertes_acumuladas),
-            subtitle = "Total defunciones"
-        )
+      
+      valueBox(
+        value= data() %>% dplyr::select(muertes_acumuladas),
+        subtitle = "Total defunciones"
+      )
     })
     
     #Armo value box con el R
@@ -226,7 +235,7 @@ server <- function(input, output, session) {
         subtitle = "Cantidad de testeos (promedio 7 días)")
     })
     
-    #armo value box de testeos
+    #armo value box de poblacion
     
     output$poblacion <- renderValueBox({
       valueBox(
@@ -234,6 +243,14 @@ server <- function(input, output, session) {
         subtitle = "Poblacion estimada")
     })
     
+    #Armo value box de % de cambio de casos ult semana vs semana previa
+    
+    output$variacion_casos <- renderValueBox({
+      valueBox(
+        value= round(data() %>% dplyr::select(`% cambio`),2),
+        subtitle = "% cambio casos ult semana vs semana previa")
+    })
+      
 
     #Mapa
     output$mapa1 <- renderLeaflet({
