@@ -21,6 +21,10 @@ ui <- fluidPage(
     theme = shinytheme("cerulean"),
     tags$head(HTML('<link rel="icon", href="ISO-IECS.png", type="image/png" />')),
     titlePanel(windowTitle = "COVID Municipios", title = ""),
+    tags$style(".small-box.bg-yellow { background-color: #fff39c !important; color: #000000 !important; border: 2px solid; border-radius: 25px;}"),
+    tags$style(".small-box.bg-green { background-color: #a5ff9c !important; color: #000000 !important; border: 2px solid; border-radius: 25px;}"),
+    tags$style(".small-box.bg-red { background-color: #ff9c9c !important; color: #000000 !important; border: 2px solid; border-radius: 25px;}"),
+    tags$style(".small-box.bg-black { background-color: #ffffff !important; color: #000000 !important; border: 2px solid; border-radius: 25px;}"),
                 # Application title
                 fluidRow(
                     column(3, align="center",
@@ -63,17 +67,16 @@ ui <- fluidPage(
                    
                     )
                 ),
-               fluidRow(
+                br(),
+                fluidRow(
                     column(12, align="center",
                     valueBoxOutput("tasa", width = 3),
                     valueBoxOutput("r", width = 3),
                     valueBoxOutput("variacion_casos", width = 3),
                     valueBoxOutput("positividad", width = 3)
-                   
-
-             
-      )
-    ),
+                ),
+                br(),
+                ),
                 fluidRow(
                     column(12, align="center",
                            selectizeInput("select_var",
@@ -168,7 +171,7 @@ server <- function(input, output, session) {
       valueBox(
         value= data() %>% dplyr::select(casos_acumulados),
         subtitle = "Total Positivos",
-        
+        color = "black"
       )
       
     })
@@ -180,17 +183,26 @@ server <- function(input, output, session) {
       
       valueBox(
         value= data() %>% dplyr::select(muertes_acumuladas),
-        subtitle = "Total defunciones"
+        subtitle = "Total defunciones",
+        color = "black"
       )
     })
     
     #Armo value box con el R
-    
+    getRColor <- function(valorR) {
+      if (as.double(valorR) > as.double(1.5)) { 
+        return("red") 
+      } else if (as.double(valorR) >= as.double(1) & as.double(valorR) <= as.double(1.5)) { 
+        return("yellow")
+      } else {
+        return("green") 
+      }
+    }
     output$r <- renderValueBox({
-        
         valueBox(
             value= round(data() %>% dplyr::select(R_semana),2),
-            subtitle = "Indicador R"
+            subtitle = "Número Rt",
+            color = getRColor(round(data() %>% dplyr::select(R_semana),2))
         )
     })
     #Armo value box con dias dup
@@ -212,19 +224,49 @@ server <- function(input, output, session) {
     })
     
     #armo value box de tasa
-    
+    getTasaColor <- function(valor, poblacion) {
+      if (as.double(poblacion) > as.double(50000)) {
+        if (as.double(valor) > as.double(200)) { 
+          return("red") 
+        } else if (as.double(valor) >= as.double(50) & as.double(valor) <= as.double(200)) { 
+          return("yellow")
+        } else {
+          return("green") 
+        }
+      } else {
+        if (as.double(valor) > as.double(150)) { 
+          return("red") 
+        } else if (as.double(valor) >= as.double(30) & as.double(valor) <= as.double(150)) { 
+          return("yellow")
+        } else {
+          return("green") 
+        }
+      }
+    }
     output$tasa <- renderValueBox({
-      valueBox(
-      value= round(data() %>% dplyr::select(incidencia_14d),2),
-      subtitle = "Tasa por 100.000 hab. (últ. 14 días)")
+        valueBox(
+        value = round(data() %>% dplyr::select(incidencia_14d),2),
+        subtitle = "Tasa por 100.000 hab. (últ. 14 días)",
+        color = getTasaColor(round(data() %>% dplyr::select(incidencia_14d),2),pobdeptos %>% filter(nomdep== input$select_depto) %>% dplyr::select(poblacion))
+      )
     })
     
     #armo value box de positividad
-    
+    getPositividadColor <- function(valor) {
+      if (as.double(valor) > as.double(30)) { 
+        return("red") 
+      } else if (as.double(valor) >= as.double(20) & as.double(valor) <= as.double(30)) { 
+        return("yellow")
+      } else {
+        return("green") 
+      }
+    }
     output$positividad <- renderValueBox({
       valueBox(
         value= round(data() %>% dplyr::select(positividad_7),2),
-        subtitle = "Indice de positividad (promedio 7 días)")
+        subtitle = "% de positividad de los tests (últ. 7 días)",
+        color = getPositividadColor(round(data() %>% dplyr::select(positividad_7),2))
+      )
     })
     
     #armo value box de testeos
@@ -232,7 +274,9 @@ server <- function(input, output, session) {
     output$testeos <- renderValueBox({
       valueBox(
         value= round(data() %>% dplyr::select(testeos_7),2),
-        subtitle = "Cantidad de testeos (promedio 7 días)")
+        subtitle = "Cantidad de testeos (promedio 7 días)",
+        color = "black"
+      )
     })
     
     #armo value box de poblacion
@@ -240,15 +284,27 @@ server <- function(input, output, session) {
     output$poblacion <- renderValueBox({
       valueBox(
         value= pobdeptos %>% filter(nomdep== input$select_depto) %>% dplyr::select(poblacion),
-        subtitle = "Poblacion estimada")
+        subtitle = "Poblacion estimada",
+        color = "black"
+      )
     })
     
     #Armo value box de % de cambio de casos ult semana vs semana previa
-    
+    getVariacionPorcentualColor <- function(valor) {
+      if (as.double(valor) > as.double(10)) { 
+        return("red") 
+      } else if (as.double(valor) >= as.double(-10) & as.double(valor) <= as.double(10)) { 
+        return("yellow")
+      } else {
+        return("green") 
+      }
+    }
     output$variacion_casos <- renderValueBox({
       valueBox(
         value= round(data() %>% dplyr::select(`% cambio`),2),
-        subtitle = "% cambio casos ult semana vs semana previa")
+        subtitle = "Variación porcentual a 7 días",
+        color = getVariacionPorcentualColor(round(data() %>% dplyr::select(`% cambio`),2))
+      )
     })
       
 
