@@ -7,9 +7,6 @@ library(dplyr)
 library(leaflet)
 library(shinythemes)
 
-
-
-
 load("Data/municipios.RData")
 load("Mapas/Mapas.Rdata")
 
@@ -174,6 +171,11 @@ server <- function(input, output, session) {
     
     })
     
+    dataR <- reactive({
+      retrasoR <- 4
+      dataR <- dataMsal %>% filter(residencia_departamento_nombre == input$select_depto & fecha== max(dataMsal$fecha)-retrasoR)
+      
+    })
     
     #Armo el box con positivos
     
@@ -211,9 +213,9 @@ server <- function(input, output, session) {
     }
     output$r <- renderValueBox({
         valueBox(
-            value= round(data() %>% dplyr::select(R_semana),2),
+            value= round(dataR() %>% dplyr::select(R_semana),2),
             subtitle = "Número Rt",
-            color = getRColor(round(data() %>% dplyr::select(R_semana),2))
+            color = getRColor(round(dataR() %>% dplyr::select(R_semana),2))
         )
     })
     #Armo value box con dias dup
