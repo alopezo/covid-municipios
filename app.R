@@ -11,7 +11,8 @@ load("Data/municipios.RData")
 load("Mapas/Mapas.Rdata")
 
 # Azul 049
-dataMsal<-dataMsal %>% filter(residencia_departamento_id %in% c(63,294,476,505,547,616,651,700,707,756,784,791,826))
+# Gral Belgrano 301
+dataMsal<-dataMsal %>% filter(residencia_departamento_id %in% c(63,294,476,505,547,616,651,700,707,756,784,791,826,301))
 
 
 ui <- fluidPage(
