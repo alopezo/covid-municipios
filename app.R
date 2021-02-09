@@ -8,9 +8,28 @@ library(leaflet)
 library(shinythemes)
 library(reshape2)
 library(rlist)
+library(png)
+library(htmlwidgets)
+library(webshot2)
 
 load("Data/municipios.RData")
 load("Mapas/Mapas.Rdata")
+
+
+#funcion para exportar dygraphs a png
+
+export <- function(plot_name, file_name = "file_name.png", ...) {
+  if(system.file(package = "webshot") == "") {
+    stop(
+      'Please install the webshot package ',
+      '(if not on CRAN, try devtools::install_github("wch/webshot"))')
+  }
+  file_name_temp_html <- basename(tempfile('file_temp', '.', '.html'))
+  on.exit(unlink(file_name_temp_html), add = TRUE)
+  html <- htmlwidgets::saveWidget(plot_name, file_name_temp_html)
+  webshot2::webshot(file_name_temp_html, file_name, ...)
+}
+
 
 # Azul 049
 # Gral Belgrano 301
@@ -105,14 +124,15 @@ ui <- fluidPage(
                                        choices = unique(dataMsal$residencia_departamento_nombre)
                                                       
                                        ,multiple = T)),
-                    column(10,
+                    column(9,
                        dygraphOutput("grafico1")
                    )
                 ),
                 br(),
                 fluidRow(
                   column(12, align="center",
-                    downloadButton("download", label = "Descargar datos de este gráfico")
+                         downloadButton("download", label = "Descargar datos"),
+                         downloadButton("btn_download_dygraph", "Descargar gráfico")
                   )
                 ),
                 br(),
@@ -157,7 +177,7 @@ server <- function(input, output, session) {
     
     ##### GRAFICOS #####    
     
-    output$grafico1 <- renderDygraph({
+  create_dygraph <- reactive({
         var=as.numeric(input$select_var)
         if (var==5) {titulo <- "Casos acumulados"} else
         if (var==6) {titulo <- "Defunciones acumuladas"} else
@@ -211,6 +231,31 @@ server <- function(input, output, session) {
         else {dg}
     })
     
+  
+  ###### Descarga Dygraphs como PNG
+  output$grafico1 <- renderDygraph({
+    create_dygraph()
+  })
+  
+  output$btn_download_dygraph <- downloadHandler(
+    filename = "grafico.png",
+    content = function(file) {
+      
+      # 1. File name for temp file
+      file_temp_png <- paste0("tmp_", Sys.Date(), ".png")
+      
+      # 1. Create file on disk
+      export(create_dygraph(), file_temp_png)
+      
+      # 2. Export
+      file.copy(file_temp_png, file, overwrite=TRUE)
+      
+      # 3. Drop file
+      file.remove(file_temp_png)
+      
+    }
+  )
+  
     
     #Armo un data reactive    
     
