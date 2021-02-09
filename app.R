@@ -6,6 +6,8 @@ library(shinydashboard)
 library(dplyr)
 library(leaflet)
 library(shinythemes)
+library(reshape2)
+library(rlist)
 
 load("Data/municipios.RData")
 load("Mapas/Mapas.Rdata")
@@ -51,7 +53,8 @@ ui <- fluidPage(
                     column(12, align="center",
                         selectizeInput("select_depto",
                                    "Departamento:",
-                                   choices = unique(dataMsal$residencia_departamento_nombre))
+                                   choices = unique(dataMsal$residencia_departamento_nombre)
+                                   )
                     ),
                 ),
                 fluidRow(
@@ -96,7 +99,12 @@ ui <- fluidPage(
                     ),
                 ),
                 fluidRow(
-                    column(1),
+                    column(2,
+                           selectInput("comparar",
+                                       "Seleccionar comparación",
+                                       choices = unique(dataMsal$residencia_departamento_nombre)
+                                                      
+                                       ,multiple = T)),
                     column(10,
                        dygraphOutput("grafico1")
                    )
@@ -134,10 +142,18 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
+
+  
+  
+  observe({
    
-    
+    u_choices <- c(unique(dataMsal$residencia_departamento_nombre[dataMsal$residencia_departamento_nombre != input$select_depto]))
+    updateSelectInput(session,"comparar","Seleccionar comparación",choices=u_choices, selected="")
+
+  })
     
     #input=list(select_var=5,select_depto="Avellaneda")
+  
     
     ##### GRAFICOS #####    
     
@@ -157,10 +173,42 @@ server <- function(input, output, session) {
         if (var== 18) {titulo <- "Indice de positividad (promedio 7 días)"}
         {NULL}
         
-        x <- xts(dataMsal[dataMsal$residencia_departamento_nombre==input$select_depto,var],dataMsal$fecha[dataMsal$residencia_departamento_nombre==input$select_depto])
+        compara_con <- input$comparar
+        
+        
+        
+        data <- as.data.frame(cbind(dataMsal$residencia_departamento_nombre[dataMsal$residencia_departamento_nombre %in% c(input$select_depto,compara_con)], as.character(dataMsal$fecha[dataMsal$residencia_departamento_nombre %in% c(input$select_depto,compara_con)]),dataMsal[dataMsal$residencia_departamento_nombre %in% c(input$select_depto,compara_con),var]))
+        
+        data$V3 <- as.numeric(data$V3)
+        colnames(data) <- c('depto','fecha','val')
+        #browser()
   
+        data <- dcast(data = data, formula = fecha ~ depto, fun.aggregate = mean, value.var = "val")
+        
+        data <- xts(data[,-1], order.by=as.Date(data[,1]))
+   
         #dygraph(x, main = paste0(titulo," - ", input$select_depto)) %>% dySeries("V1", label="Valor día")
-        dygraph(x, main = paste0(titulo," - ", input$select_depto)) %>% dySeries(colnames(x), label="Valor día")
+        if (is.null(colnames(data))==T)
+        {colnames(data) <- input$select_depto} 
+        
+        if (length(colnames(data))>1)
+        {
+          colnames(data) <- colnames(data)
+          seleccion_compara <- colnames(data)[colnames(data)!=input$select_depto]
+          series <- vector()
+          for (s in 1:length(seleccion_compara))
+          {series <- c(series,paste0("dySeries(name=","'",seleccion_compara[as.numeric(s)],"'",",strokePattern = 'dotted')")) 
+          }
+        }
+        dg <- dygraph(data=data, main = paste0(titulo,' - ',input$select_depto)) %>% dySeries(name=input$select_depto, label=input$select_depto, color = 'black', strokeWidth = 1.8) 
+        if (exists("series")==T)
+        {parte_dg2 <- paste(series, collapse= " %>% ")
+        }
+        if (exists("series")==T)
+        {
+          eval(parse(text=paste0("dg %>% ",parte_dg2)))
+        }
+        else {dg}
     })
     
     
@@ -370,3 +418,4 @@ server <- function(input, output, session) {
 shinyApp(ui = ui, server = server)
 
 
+                                                                                                                  
