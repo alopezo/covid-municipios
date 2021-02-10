@@ -10,11 +10,17 @@ library(stats)
 
 #### DESCARGA DATOS  ####
 urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos.csv'
-download.file(urlMsal, "Covid19Casos.csv")
+#download.file(urlMsal, "Covid19Casos.csv")
 
 #### IMPORTA DATOS ####
-dataMsal_c <-read.csv("Covid19Casos.csv", fileEncoding = "UTF-8") #dejo una version completa para testeos y positividad
-dataMsal<-dataMsal_c %>% filter(clasificacion_resumen=="Confirmado" & residencia_provincia_id==6)
+dataMsal_c <- read.csv("Covid19Casos.csv", fileEncoding = "UTF-8") #dejo una version completa para testeos y positividad
+dataMsal_c$residencia_departamento_id <- dataMsal_c$residencia_provincia_id 
+dataMsal_c$residencia_departamento_nombre <- dataMsal_c$residencia_provincia_nombre
+
+
+dataMsal<-dataMsal_c %>% filter(clasificacion_resumen=="Confirmado")
+dataMsal$residencia_departamento_id <- dataMsal$residencia_provincia_id 
+dataMsal$residencia_departamento_nombre <- dataMsal$residencia_provincia_nombre
 
 
 ##### COMPLETA FECHA DIAGNOSTICO CON OTRAS FECHAS #####
@@ -124,6 +130,7 @@ dataMsal <- dataMsal %>%
 
 #### CALCULA INCIDENCIA CASOS Y MUERTES ULTIMOS 14 DIAS ####
 load("Data/poblacion.RData")
+
 for (depto in (pobdeptos$coddep))
 {dataMsal$poblacion_depto[dataMsal$residencia_departamento_id==depto] <- pobdeptos$poblacion[pobdeptos$coddep==depto]}
 dataMsal$incidencia_14d <- dataMsal$total_casos_14d/dataMsal$poblacion_depto*100000
