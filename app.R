@@ -8,27 +8,12 @@ library(leaflet)
 library(shinythemes)
 library(reshape2)
 library(rlist)
-library(png)
-library(htmlwidgets)
-library(webshot2)
+library(ggplot2)
+
+
 
 load("Data/municipios.RData")
 load("Mapas/Mapas.Rdata")
-
-
-#funcion para exportar dygraphs a png
-
-export <- function(plot_name, file_name = "file_name.png", ...) {
-  if(system.file(package = "webshot") == "") {
-    stop(
-      'Please install the webshot package ',
-      '(if not on CRAN, try devtools::install_github("wch/webshot"))')
-  }
-  file_name_temp_html <- basename(tempfile('file_temp', '.', '.html'))
-  on.exit(unlink(file_name_temp_html), add = TRUE)
-  html <- htmlwidgets::saveWidget(plot_name, file_name_temp_html)
-  webshot2::webshot(file_name_temp_html, file_name, ...)
-}
 
 
 # Azul 049
@@ -132,7 +117,7 @@ ui <- fluidPage(
                 fluidRow(
                   column(12, align="center",
                          downloadButton("download", label = "Descargar datos"),
-                         downloadButton("btn_download_dygraph", "Descargar gráfico")
+                         downloadButton("download_graph", "Descargar gráfico")
                   )
                 ),
                 br(),
@@ -177,7 +162,7 @@ server <- function(input, output, session) {
     
     ##### GRAFICOS #####    
     
-  create_dygraph <- reactive({
+  output$grafico1 <-renderDygraph({
         var=as.numeric(input$select_var)
         if (var==5) {titulo <- "Casos acumulados"} else
         if (var==6) {titulo <- "Defunciones acumuladas"} else
@@ -232,26 +217,76 @@ server <- function(input, output, session) {
     })
     
   
-  ###### Descarga Dygraphs como PNG
-  output$grafico1 <- renderDygraph({
-    create_dygraph()
-  })
+#Armo un gráfico reactivo para poder descargarlo como png
+
+
   
-  output$btn_download_dygraph <- downloadHandler(
-    filename = "grafico.png",
+grafico <- reactive({
+
+  var=as.numeric(input$select_var)
+  if (var==5) {titulo <- "Casos acumulados"} else
+    if (var==6) {titulo <- "Defunciones acumuladas"} else
+      if (var==7) {titulo <- "Rt Diario"} else
+        if (var==8) {titulo <- "Casos diarios (promedio 7 días)"} else
+          if (var==9) {titulo <- "Defunciones diarias (promedio 7 días)"} else
+            if (var== 3) {titulo <- "Casos diarios"}
+  if (var== 4) {titulo <- "Defunciones diarias"}
+  if (var== 13) {titulo <- "Casos por 100.000 habitantes (últimos 14 días)"}
+  if (var== 14) {titulo <- "Muertes por 100.000 habitantes (últimos 14 días)"}
+  if (var== 16) {titulo <- "% de cambio casos nuevos ultima semana vs. semana previa"}
+  if (var== 17) {titulo <- "Cantidad de testeos (promedio 7 días)"}
+  if (var== 18) {titulo <- "Indice de positividad (promedio 7 días)"}
+  {NULL}
+  
+  
+  
+data <- descarga()
+
+colnames(data) <- c('fecha','depto','val')  
+  
+  
+n <- length(unique(data$depto))-1
+  
+  
+if(n > 0){
+    pal <- c("black",rainbow(n))
+  } else{
+    pal <- "black" 
+  }
+
+theme_tablero <- function () { 
+  theme_bw() %+replace% 
+    theme(
+      panel.border = element_blank(),
+      plot.title = element_text(face= "bold",size = 12),
+      legend.title = element_text(face= "bold",size = 12)
+      
+    )
+} 
+
+
+graf <- ggplot()+
+  geom_line(data= subset(data,data$depto == input$select_depto),aes_string(x= "fecha", y= "val",color= "depto"))+
+  geom_line(data= subset(data,data$depto != input$select_depto),aes_string(x= "fecha", y= "val",color= "depto"), linetype= "dotted")+
+  labs(title = paste(titulo,input$select_depto,sep="-"),
+       x= "Fecha", y= "Valor", color= "Departamento")+
+  scale_color_manual(values = pal)+
+  theme_tablero()
+  
+  
+  
+})
+  
+
+  ###### Descarga Dygraphs como PNG
+  
+  output$download_graph <- downloadHandler(
+    filename = function() {
+      paste("grafico","png",sep = ".")
+      
+    },
     content = function(file) {
-      
-      # 1. File name for temp file
-      file_temp_png <- paste0("tmp_", Sys.Date(), ".png")
-      
-      # 1. Create file on disk
-      export(create_dygraph(), file_temp_png)
-      
-      # 2. Export
-      file.copy(file_temp_png, file, overwrite=TRUE)
-      
-      # 3. Drop file
-      file.remove(file_temp_png)
+      ggsave(file,plot= grafico(), device= "png",dpi= 120,width = 20,height = 12, units = "cm")
       
     }
   )
@@ -433,10 +468,11 @@ server <- function(input, output, session) {
             addPolygons(stroke = T, weight=0.3)
         
     })
-    
+  
     # reactive para descarga
     descarga <- reactive({
-      desc <- dataMsal[dataMsal$residencia_departamento_nombre==input$select_depto,c(2,15,as.numeric(input$select_var))]
+ 
+      desc <- dataMsal[dataMsal$residencia_departamento_nombre %in% c(input$select_depto, input$comparar),c(2,15,as.numeric(input$select_var))]
       
       
     })
