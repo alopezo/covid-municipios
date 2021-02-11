@@ -24,24 +24,24 @@ dataMsal$residencia_departamento_nombre <- dataMsal$residencia_provincia_nombre
 
 
 ##### COMPLETA FECHA DIAGNOSTICO CON OTRAS FECHAS #####
-dataMsal$fecha <- ""
-for (i in 1:nrow(dataMsal))
-  {
-  if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]=="" & dataMsal$fecha_apertura[i]=="") {dataMsal$fecha[i] <- ""} else
-  if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]=="" & dataMsal$fecha_apertura[i]!="") {dataMsal$fecha[i] <- dataMsal$fecha_apertura[i]} else
-  if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]!="") {dataMsal$fecha[i] <- dataMsal$fecha_inicio_sintomas[i]}
-  print(paste0("IMPUTANDO FECHA - COMPLETO: ", round(i/nrow(dataMsal)*100,2)))
-  } 
-
-dataMsal$fecha_diagnostico[dataMsal$fecha_diagnostico==""] <- dataMsal$fecha[dataMsal$fecha_diagnostico==""]
-dataMsal$fecha <- NULL
+# dataMsal$fecha <- ""
+# for (i in 1:nrow(dataMsal))
+#   {
+#   if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]=="" & dataMsal$fecha_apertura[i]=="") {dataMsal$fecha[i] <- ""} else
+#   if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]=="" & dataMsal$fecha_apertura[i]!="") {dataMsal$fecha[i] <- dataMsal$fecha_apertura[i]} else
+#   if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]!="") {dataMsal$fecha[i] <- dataMsal$fecha_inicio_sintomas[i]}
+#   print(paste0("IMPUTANDO FECHA - COMPLETO: ", round(i/nrow(dataMsal)*100,2)))
+#   }
+# 
+# dataMsal$fecha_diagnostico[dataMsal$fecha_diagnostico==""] <- dataMsal$fecha[dataMsal$fecha_diagnostico==""]
+# dataMsal$fecha <- NULL
 
 
 ##### NOMBRES DE PARTIDOS PARA APP #####
 denom_depto <- dataMsal %>% distinct(residencia_departamento_id, residencia_departamento_nombre) %>%
                             arrange(residencia_departamento_id, residencia_departamento_nombre)
+denom_depto <- union_all(denom_depto,data.frame(residencia_departamento_id=0,residencia_departamento_nombre="Total país")) %>% arrange(residencia_departamento_id)
 
-                            
 #### CREA DF AGREGADO ####
 
 # df de casos
@@ -58,11 +58,31 @@ muertes <- dataMsal %>%
                   residencia_departamento_id) %>%
                   tally() %>% filter(fecha_fallecimiento!="" & fecha_fallecimiento>="2020-03-01" & residencia_departamento_id!=0)
 
+casos_ARG <- dataMsal %>% 
+      group_by(
+        fecha_diagnostico) %>%
+        tally() %>% filter(fecha_diagnostico!="" & fecha_diagnostico>="2020-03-01") %>% mutate(residencia_departamento_id=0) %>% select(fecha_diagnostico,residencia_departamento_id,n)
+
+muertes_ARG <- dataMsal %>% 
+  group_by(
+    fecha_fallecimiento) %>%
+  tally() %>% filter(fecha_fallecimiento!="" & fecha_fallecimiento>="2020-03-01") %>% mutate(residencia_departamento_id=0) %>% select(fecha_fallecimiento,residencia_departamento_id,n)
+
+
 # formato fechas
 colnames(casos)[1] <- "fecha"
 colnames(muertes)[1] <- "fecha"
 casos$fecha <- as.Date(casos$fecha)
 muertes$fecha <- as.Date(muertes$fecha)
+colnames(casos_ARG)[1] <- "fecha"
+colnames(muertes_ARG)[1] <- "fecha"
+casos_ARG$fecha <- as.Date(casos_ARG$fecha)
+muertes_ARG$fecha <- as.Date(muertes_ARG$fecha)
+
+casos <- union_all(casos_ARG,casos)
+muertes <- union_all(muertes_ARG,muertes)
+rm(casos_ARG)
+rm(muertes_ARG)
 
 # todas las combinaciones posibles dia/depto/casos/muertes 
 # para que en el df aparezcan todos los dias/deptos/casos/muertes
@@ -91,7 +111,6 @@ dataMsal <- dataMsal %>% arrange(residencia_departamento_id) %>%
   group_by(residencia_departamento_id) %>% 
   mutate(casos_acumulados=cumsum(casos), 
          muertes_acumuladas=cumsum(muertes))
-
 
 
 #### CALCULA R PROMEDIO ULTIMA SEMANA ####
@@ -173,6 +192,15 @@ dataMsal <- dataMsal %>%
 
 #Convierto las variables fecha en Date
 
+dataMsal_0 <- dataMsal_c
+dataMsal_0$residencia_departamento_id <- 0
+dataMsal_0$residencia_departamento_nombre <- "Total país"
+
+dataMsal_c$residencia_departamento_id <- dataMsal_c$residencia_provincia_id
+dataMsal_c$residencia_departamento_nombre <- dataMsal_c$residencia_provincia_nombre
+dataMsal_c <- union_all(dataMsal_0,dataMsal_c)
+rm(dataMsal_0)
+
 dataMsal_c$fecha_inicio_sintomas <- as.Date(dataMsal_c$fecha_inicio_sintomas,format = "%Y-%m-%d")
 dataMsal_c$fecha_diagnostico <- as.Date(dataMsal_c$fecha_diagnostico,format = "%Y-%m-%d")
 dataMsal_c$fecha_apertura <- as.Date(dataMsal_c$fecha_apertura,format = "%Y-%m-%d")
@@ -180,7 +208,7 @@ dataMsal_c$fecha_apertura <- as.Date(dataMsal_c$fecha_apertura,format = "%Y-%m-%
 #Genero los indicadores
 
 testeosyposit <- dataMsal_c %>%
-  filter(residencia_provincia_id== 6 & residencia_departamento_id != 0) %>%
+  #filter(residencia_provincia_id== 6 & residencia_departamento_id != 0) %>%
   mutate(fecha= coalesce(fecha_diagnostico,fecha_inicio_sintomas,fecha_apertura))%>%
   group_by(fecha,clasificacion,residencia_departamento_id)%>%
   summarise(n= n()) %>%
@@ -207,7 +235,6 @@ dataMsal <- dataMsal %>%
   as.data.frame()
 
      
-
 
 ##### GRABA RDATA PARA APP #####
 save.image(file="Data/municipios.RData") 

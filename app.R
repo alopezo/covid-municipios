@@ -72,7 +72,7 @@ ui <- fluidPage(
                     column(12, align="center",
                         selectizeInput("select_depto",
                                    "Departamento:",
-                                   choices = unique(dataMsal$residencia_departamento_nombre)
+                                   choices = unique(dataMsal$residencia_departamento_nombre)[unique(dataMsal$residencia_departamento_nombre)!="SIN ESPECIFICAR"]
                                    )
                     ),
                 ),
