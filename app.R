@@ -449,7 +449,7 @@ grafico <- reactive({
 
     #Mapa
     output$mapa1 <- renderLeaflet({
-        #browser()
+        browser()
     codigo <- min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])
     
     if (codigo==0)
