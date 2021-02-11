@@ -10,7 +10,7 @@ library(stats)
 
 #### DESCARGA DATOS  ####
 urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos.csv'
-#download.file(urlMsal, "Covid19Casos.csv")
+download.file(urlMsal, "Covid19Casos.csv")
 
 #### IMPORTA DATOS ####
 dataMsal_c <- read.csv("Covid19Casos.csv", fileEncoding = "UTF-8") #dejo una version completa para testeos y positividad
@@ -19,22 +19,23 @@ dataMsal_c$residencia_departamento_nombre <- dataMsal_c$residencia_provincia_nom
 
 
 dataMsal<-dataMsal_c %>% filter(clasificacion_resumen=="Confirmado")
+nrow(dataMsal)
 dataMsal$residencia_departamento_id <- dataMsal$residencia_provincia_id 
 dataMsal$residencia_departamento_nombre <- dataMsal$residencia_provincia_nombre
 
 
 ##### COMPLETA FECHA DIAGNOSTICO CON OTRAS FECHAS #####
-# dataMsal$fecha <- ""
-# for (i in 1:nrow(dataMsal))
-#   {
-#   if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]=="" & dataMsal$fecha_apertura[i]=="") {dataMsal$fecha[i] <- ""} else
-#   if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]=="" & dataMsal$fecha_apertura[i]!="") {dataMsal$fecha[i] <- dataMsal$fecha_apertura[i]} else
-#   if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]!="") {dataMsal$fecha[i] <- dataMsal$fecha_inicio_sintomas[i]}
-#   print(paste0("IMPUTANDO FECHA - COMPLETO: ", round(i/nrow(dataMsal)*100,2)))
-#   }
-# 
-# dataMsal$fecha_diagnostico[dataMsal$fecha_diagnostico==""] <- dataMsal$fecha[dataMsal$fecha_diagnostico==""]
-# dataMsal$fecha <- NULL
+dataMsal$fecha <- ""
+for (i in 1:nrow(dataMsal))
+  {
+  if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]=="" & dataMsal$fecha_apertura[i]=="") {dataMsal$fecha[i] <- ""} else
+  if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]=="" & dataMsal$fecha_apertura[i]!="") {dataMsal$fecha[i] <- dataMsal$fecha_apertura[i]} else
+  if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]!="") {dataMsal$fecha[i] <- dataMsal$fecha_inicio_sintomas[i]}
+  print(paste0("IMPUTANDO FECHA - COMPLETO: ", round(i/nrow(dataMsal)*100,2)))
+  }
+
+dataMsal$fecha_diagnostico[dataMsal$fecha_diagnostico==""] <- dataMsal$fecha[dataMsal$fecha_diagnostico==""]
+dataMsal$fecha <- NULL
 
 
 ##### NOMBRES DE PARTIDOS PARA APP #####
