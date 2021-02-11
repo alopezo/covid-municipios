@@ -449,21 +449,36 @@ grafico <- reactive({
 
     #Mapa
     output$mapa1 <- renderLeaflet({
-        
+        #browser()
     codigo <- min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])
-    leaflet(subset(Deptos, depto==codigo),options = leafletOptions(zoomControl = FALSE)) %>%
+    
+    if (codigo==0)
+    {leaflet(Arg,options = leafletOptions(zoomControl = FALSE)) %>%
+        addProviderTiles(providers$CartoDB.Positron) %>%
+        addPolygons(stroke = T, weight=0.3) %>% setView(-63.8, -36.2, zoom = 2)   }
+    else
+    {
+      leaflet(subset(Deptos, depto==codigo),options = leafletOptions(zoomControl = FALSE)) %>%
             addProviderTiles(providers$CartoDB.Positron) %>%
             addPolygons(stroke = T, weight=0.3) %>% 
-            addMarkers(~X1, ~X2, popup = ~as.character(""), label = ~as.character(departamen)) %>% setView(-60.096495787602436, -36.59018032729006, zoom = 5)  
-        
+            addMarkers(~X1, ~X2, popup = ~as.character(""), label = ~as.character(denom_depto$residencia_departamento_nombre[denom_depto$residencia_departamento_id==codigo])) %>% setView(-63.8, -36.2, zoom = 3)  
+    }   
     })
+    
+    
     output$mapa2 <- renderLeaflet({
         
         codigo <- min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])
+        if (codigo==0)
+        {leaflet(Arg,options = leafletOptions(zoomControl = FALSE)) %>%
+            addProviderTiles(providers$CartoDB.Positron) %>%
+            addPolygons(stroke = T, weight=0.3) }
+        else
+        {
         leaflet(subset(Deptos, depto==codigo),options = leafletOptions(zoomControl = FALSE)) %>% 
             addProviderTiles(providers$CartoDB.Positron) %>%
             addPolygons(stroke = T, weight=0.3)
-        
+        }
     })
     
     # reactive para descarga
