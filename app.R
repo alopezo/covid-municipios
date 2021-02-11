@@ -151,7 +151,8 @@ server <- function(input, output, session) {
   
   observe({
    
-    u_choices <- c(unique(dataMsal$residencia_departamento_nombre[dataMsal$residencia_departamento_nombre != input$select_depto]))
+    u_choices <- c(unique(dataMsal$residencia_departamento_nombre[dataMsal$residencia_departamento_nombre != input$select_depto &
+                                                                  dataMsal$residencia_departamento_nombre != "SIN ESPECIFICAR" ]))
     updateSelectInput(session,"comparar","Seleccionar comparación",choices=u_choices, selected="")
 
   })
@@ -449,7 +450,7 @@ grafico <- reactive({
 
     #Mapa
     output$mapa1 <- renderLeaflet({
-        #browser()
+        
     codigo <- min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])
     
     if (codigo==0)
