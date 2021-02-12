@@ -23,23 +23,36 @@ load("Mapas/Mapas.Rdata")
 ui <- fluidPage(
     theme = shinytheme("cerulean"),
     tags$head(HTML('<link rel="icon", href="ISO-IECS.png", type="image/png" />')),
-    titlePanel(windowTitle = "COVID Municipios", title = ""),
+    titlePanel(windowTitle = "COVID-CIIPS Argentina", title = ""),
     tags$style(".small-box.bg-yellow { background-color: #fff39c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
     tags$style(".small-box.bg-green { background-color: #a5ff9c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
     tags$style(".small-box.bg-red { background-color: #ff9c9c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
     tags$style(".small-box.bg-black { background-color: #ffffff !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
                 # Application title
                 fluidRow(
-                    column(3, align="center",
-                           tags$a(
-                               img(src="CIPSlogo.png", height = 88, width = 150),
-                               href="https://www.iecs.org.ar/ciips/",
-                               target="_blank"
-                           )
-                    ),
+                    column(3,
+                           fluidRow(
+                             column(12,
+                                    tags$a(
+                                      img(src="iecslogo.png", height = 66, width = 200),
+                                      href="https://www.iecs.org.ar",
+                                      target="_blank"
+                                    )
+                             )
+                           ),
+                           fluidRow(
+                             column(12,
+                                    tags$a(
+                                      img(src="CIPSlogo.png", height = 117, width = 200),
+                                      href="https://www.iecs.org.ar/ciips/",
+                                      target="_blank"
+                                    )
+                             )
+                           ),
+                     ),
                     column(9,
                            fluidRow(
-                             tags$h2("Proyecto COVID Municipios Bonaerenses")
+                             tags$h2("Tablero de control dinámico COVID-CIIPS Argentina")
                            ),
                            fluidRow(             
                              p("Datos procesados a partir de información anonimizada del Sistema Nacional de Vigilancia en Salud (SNVS - SISA)"),
