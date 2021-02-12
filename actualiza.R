@@ -17,11 +17,21 @@ dataMsal_c <- read.csv("Covid19Casos.csv", fileEncoding = "UTF-8") #dejo una ver
 dataMsal_c$residencia_departamento_id <- dataMsal_c$residencia_provincia_id 
 dataMsal_c$residencia_departamento_nombre <- dataMsal_c$residencia_provincia_nombre
 
-
 dataMsal<-dataMsal_c %>% filter(clasificacion_resumen=="Confirmado")
 nrow(dataMsal)
 dataMsal$residencia_departamento_id <- dataMsal$residencia_provincia_id 
 dataMsal$residencia_departamento_nombre <- dataMsal$residencia_provincia_nombre
+
+
+##### TOTALES CRUDOS #####
+totales <- 
+  dataMsal_c %>% filter(clasificacion_resumen=="Confirmado") %>% 
+    group_by(residencia_departamento_nombre) %>%
+    dplyr::summarise(confirmados=sum(clasificacion_resumen=="Confirmado"),
+                     fallecidos=sum(fallecido=="SI")) %>% 
+    union_all(data.frame(residencia_departamento_nombre="Total país",
+                         confirmados=nrow(dataMsal_c[dataMsal_c$clasificacion_resumen=="Confirmado",]),
+                         fallecidos=nrow(dataMsal_c[dataMsal_c$fallecido=="SI" & dataMsal_c$clasificacion_resumen=="Confirmado",])))
 
 
 ##### COMPLETA FECHA DIAGNOSTICO CON OTRAS FECHAS #####

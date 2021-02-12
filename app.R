@@ -9,6 +9,7 @@ library(shinythemes)
 library(reshape2)
 library(rlist)
 library(ggplot2)
+library(scales)
 
 load("Data/municipios.RData")
 load("Mapas/Mapas.Rdata")
@@ -198,7 +199,7 @@ server <- function(input, output, session) {
         data <- as.data.frame(cbind(dataMsal$residencia_departamento_nombre[dataMsal$residencia_departamento_nombre %in% c(input$select_depto,compara_con)], as.character(dataMsal$fecha[dataMsal$residencia_departamento_nombre %in% c(input$select_depto,compara_con)]),dataMsal[dataMsal$residencia_departamento_nombre %in% c(input$select_depto,compara_con),var]))
         
         # data$V2 <- as.Date(data$V2)
-        str(data$V3)
+        
         data$V3 <- as.numeric(as.character(data$V3))
         colnames(data) <- c('depto','fecha','val')
         
@@ -322,9 +323,9 @@ grafico <- reactive({
     #Armo el box con positivos
     
     output$positivos <- renderValueBox({
-      
+      valor <- totales$confirmados[totales$residencia_departamento_nombre==input$select_depto]
       valueBox(
-        value= data() %>% dplyr::select(casos_acumulados),
+        value= format(valor, big.mark='.'),
         subtitle = "Total Positivos",
         color = "black"
       )
@@ -335,9 +336,9 @@ grafico <- reactive({
     #Armo value box defunciones
     
     output$defunciones <- renderValueBox({
-      
+      valor <- totales$fallecidos[totales$residencia_departamento_nombre==input$select_depto]
       valueBox(
-        value= data() %>% dplyr::select(muertes_acumuladas),
+        value=format(valor, big.mark = '.'),
         subtitle = "Total defunciones",
         color = "black"
       )
@@ -354,15 +355,16 @@ grafico <- reactive({
       }
     }
     output$r <- renderValueBox({
-        valueBox(
-            value= round(dataR() %>% dplyr::select(R_semana),2),
+      valor <-  round(dataR() %>% dplyr::select(R_semana),2)  
+      valueBox(
+            value= format(valor, big.mark = '.', decimal.mark = ','),
             subtitle = "Número Rt",
             color = getRColor(round(dataR() %>% dplyr::select(R_semana),2))
         )
     })
     #Armo value box con dias dup
     output$dd <- renderValueBox({
-        print(input$select_depto)
+        
         valueBox(
             value= 
               if(is.na(round(diasDuplicacion$dias_duplicacion[min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])],2))
@@ -399,8 +401,9 @@ grafico <- reactive({
       }
     }
     output$tasa <- renderValueBox({
-        valueBox(
-        value = round(data() %>% dplyr::select(incidencia_14d),2),
+      valor <- round(data() %>% dplyr::select(incidencia_14d),1)  
+      valueBox(
+        value = format(valor,big.mark = ',', decimal.mark = ','),
         subtitle = "Tasa por 100.000 hab. (últ. 14 días)",
         color = getTasaColor(round(data() %>% dplyr::select(incidencia_14d),2),pobdeptos %>% filter(nomdep== input$select_depto) %>% dplyr::select(poblacion))
       )
@@ -417,8 +420,9 @@ grafico <- reactive({
       }
     }
     output$positividad <- renderValueBox({
+      valor <- round(data() %>% dplyr::select(positividad_7),1)
       valueBox(
-        value= paste(round(data() %>% dplyr::select(positividad_7),2),"%"),
+        value= paste(format(valor, big.mark = '.', decimal.mark = ','),"%"),
         subtitle = "Positividad de los tests (últ. 7 días)",
         color = getPositividadColor(round(data() %>% dplyr::select(positividad_7),2))
       )
@@ -427,8 +431,9 @@ grafico <- reactive({
     #armo value box de testeos
     
     output$testeos <- renderValueBox({
+      valor <- round(data() %>% dplyr::select(testeos_7),0)
       valueBox(
-        value= round(data() %>% dplyr::select(testeos_7),2),
+        value= format(valor,big.mark = '.', decimal.mark = ','),
         subtitle = "Cantidad de testeos (promedio 7 días)",
         color = "black"
       )
@@ -437,8 +442,9 @@ grafico <- reactive({
     #armo value box de poblacion
     
     output$poblacion <- renderValueBox({
+      valor <- pobdeptos %>% filter(nomdep== input$select_depto) %>% dplyr::select(poblacion)
       valueBox(
-        value= pobdeptos %>% filter(nomdep== input$select_depto) %>% dplyr::select(poblacion),
+        value=format(valor, big.mark = '.'),
         subtitle = "Poblacion estimada",
         color = "black"
       )
@@ -455,8 +461,9 @@ grafico <- reactive({
       }
     }
     output$variacion_casos <- renderValueBox({
+      valor <- round(data() %>% dplyr::select(`% cambio`),1)
       valueBox(
-        value= paste(round(data() %>% dplyr::select(`% cambio`),2),"%"),
+        value= paste(format(valor, big.mark = '.', decimal.mark = ','),"%"),
         subtitle = "Variación de casos a 7 días",
         color = getVariacionPorcentualColor(round(data() %>% dplyr::select(`% cambio`),2))
       )
