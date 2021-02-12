@@ -406,7 +406,7 @@ grafico <- reactive({
     output$tasa <- renderValueBox({
       valor <- round(data() %>% dplyr::select(incidencia_14d),1)  
       valueBox(
-        value = format(valor,big.mark = ',', decimal.mark = ','),
+        value = format(valor,big.mark = '.', decimal.mark = ','),
         subtitle = "Tasa por 100.000 hab. (últ. 14 días)",
         color = getTasaColor(round(data() %>% dplyr::select(incidencia_14d),2),pobdeptos %>% filter(nomdep== input$select_depto) %>% dplyr::select(poblacion))
       )
