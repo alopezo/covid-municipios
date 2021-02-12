@@ -190,16 +190,18 @@ server <- function(input, output, session) {
         if (var== 17) {titulo <- "Cantidad de testeos (promedio 7 días)"}
         if (var== 18) {titulo <- "Indice de positividad (promedio 7 días)"}
         {NULL}
-        
+        # browser()
         compara_con <- input$comparar
         
         
         
         data <- as.data.frame(cbind(dataMsal$residencia_departamento_nombre[dataMsal$residencia_departamento_nombre %in% c(input$select_depto,compara_con)], as.character(dataMsal$fecha[dataMsal$residencia_departamento_nombre %in% c(input$select_depto,compara_con)]),dataMsal[dataMsal$residencia_departamento_nombre %in% c(input$select_depto,compara_con),var]))
         
-        data$V3 <- as.numeric(data$V3)
+        # data$V2 <- as.Date(data$V2)
+        str(data$V3)
+        data$V3 <- as.numeric(as.character(data$V3))
         colnames(data) <- c('depto','fecha','val')
-        #browser()
+        
   
         data <- dcast(data = data, formula = fecha ~ depto, fun.aggregate = mean, value.var = "val")
         
