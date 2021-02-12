@@ -10,6 +10,7 @@ library(reshape2)
 library(rlist)
 library(ggplot2)
 library(scales)
+library(shinyWidgets)
 
 load("Data/municipios.RData")
 load("Mapas/Mapas.Rdata")
@@ -117,11 +118,13 @@ ui <- fluidPage(
                 ),
                 fluidRow(
                     column(2,
-                           selectInput("comparar",
-                                       "Seleccionar comparación",
-                                       choices = unique(dataMsal$residencia_departamento_nombre)
-                                                      
-                                       ,multiple = T)),
+                           pickerInput(
+                             inputId = "comparar",
+                             label = "Seleccionar comparación", 
+                             choices = unique(dataMsal$residencia_departamento_nombre),
+                             multiple = TRUE,
+                             options = list('none-selected-text'= "Jurisdicción")
+                           )),
                     column(9,
                        dygraphOutput("grafico1")
                    )
@@ -167,7 +170,7 @@ server <- function(input, output, session) {
    
     u_choices <- c(unique(dataMsal$residencia_departamento_nombre[dataMsal$residencia_departamento_nombre != input$select_depto &
                                                                   dataMsal$residencia_departamento_nombre != "SIN ESPECIFICAR" ]))
-    updateSelectInput(session,"comparar","Seleccionar comparación",choices=u_choices, selected="")
+    updatePickerInput(session,"comparar","Seleccionar comparación",choices=u_choices, selected="Seleccionar comparación")
 
   })
     
