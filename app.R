@@ -328,7 +328,7 @@ grafico <- reactive({
     output$positivos <- renderValueBox({
       valor <- totales$confirmados[totales$residencia_departamento_nombre==input$select_depto]
       valueBox(
-        value= format(valor, big.mark='.'),
+        value= format(valor, big.mark='.', decimal.mark = ','),
         subtitle = "Total Positivos",
         color = "black"
       )
@@ -341,7 +341,7 @@ grafico <- reactive({
     output$defunciones <- renderValueBox({
       valor <- totales$fallecidos[totales$residencia_departamento_nombre==input$select_depto]
       valueBox(
-        value=format(valor, big.mark = '.'),
+        value=format(valor, big.mark = '.', decimal.mark = ','),
         subtitle = "Total defunciones",
         color = "black"
       )
@@ -434,7 +434,7 @@ grafico <- reactive({
     #armo value box de testeos
     
     output$testeos <- renderValueBox({
-      valor <- round(data() %>% dplyr::select(testeos_7),0)
+      valor <- data() %>% dplyr::select(testeos_7)
       valueBox(
         value= format(valor,big.mark = '.', decimal.mark = ','),
         subtitle = "Cantidad de testeos (promedio 7 días)",
@@ -447,7 +447,7 @@ grafico <- reactive({
     output$poblacion <- renderValueBox({
       valor <- pobdeptos %>% filter(nomdep== input$select_depto) %>% dplyr::select(poblacion)
       valueBox(
-        value=format(valor, big.mark = '.'),
+        value=format(valor, big.mark = '.', decimal.mark = ','),
         subtitle = "Poblacion estimada",
         color = "black"
       )
