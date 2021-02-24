@@ -10,7 +10,7 @@ library(stats)
 
 #### DESCARGA DATOS  ####
 urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos.csv'
-download.file(urlMsal, "Covid19Casos.csv")
+#download.file(urlMsal, "Covid19Casos.csv")
 
 #### IMPORTA DATOS ####
 dataMsal_c <- read.csv("Covid19Casos.csv", fileEncoding = "UTF-8") #dejo una version completa para testeos y positividad
@@ -29,29 +29,29 @@ totales <-
     group_by(residencia_departamento_nombre) %>%
     dplyr::summarise(confirmados=sum(clasificacion_resumen=="Confirmado"),
                      fallecidos=sum(fallecido=="SI")) %>% 
-    union_all(data.frame(residencia_departamento_nombre="Total paÃ­s",
+    union_all(data.frame(residencia_departamento_nombre="Total país",
                          confirmados=nrow(dataMsal_c[dataMsal_c$clasificacion_resumen=="Confirmado",]),
                          fallecidos=nrow(dataMsal_c[dataMsal_c$fallecido=="SI" & dataMsal_c$clasificacion_resumen=="Confirmado",])))
 
 
 ##### COMPLETA FECHA DIAGNOSTICO CON OTRAS FECHAS #####
-dataMsal$fecha <- ""
-for (i in 1:nrow(dataMsal))
-  {
-  if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]=="" & dataMsal$fecha_apertura[i]=="") {dataMsal$fecha[i] <- ""} else
-  if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]=="" & dataMsal$fecha_apertura[i]!="") {dataMsal$fecha[i] <- dataMsal$fecha_apertura[i]} else
-  if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]!="") {dataMsal$fecha[i] <- dataMsal$fecha_inicio_sintomas[i]}
-  print(paste0("IMPUTANDO FECHA - COMPLETO: ", round(i/nrow(dataMsal)*100,2)))
-  }
-
-dataMsal$fecha_diagnostico[dataMsal$fecha_diagnostico==""] <- dataMsal$fecha[dataMsal$fecha_diagnostico==""]
-dataMsal$fecha <- NULL
-
+# dataMsal$fecha <- ""
+# for (i in 1:nrow(dataMsal))
+#   {
+#   if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]=="" & dataMsal$fecha_apertura[i]=="") {dataMsal$fecha[i] <- ""} else
+#   if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]=="" & dataMsal$fecha_apertura[i]!="") {dataMsal$fecha[i] <- dataMsal$fecha_apertura[i]} else
+#   if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]!="") {dataMsal$fecha[i] <- dataMsal$fecha_inicio_sintomas[i]}
+#   print(paste0("IMPUTANDO FECHA - COMPLETO: ", round(i/nrow(dataMsal)*100,2)))
+#   }
+# 
+# dataMsal$fecha_diagnostico[dataMsal$fecha_diagnostico==""] <- dataMsal$fecha[dataMsal$fecha_diagnostico==""]
+# dataMsal$fecha <- NULL
+# 
 
 ##### NOMBRES DE PARTIDOS PARA APP #####
 denom_depto <- dataMsal %>% distinct(residencia_departamento_id, residencia_departamento_nombre) %>%
                             arrange(residencia_departamento_id, residencia_departamento_nombre)
-denom_depto <- union_all(denom_depto,data.frame(residencia_departamento_id=0,residencia_departamento_nombre="Total paÃ­s")) %>% arrange(residencia_departamento_id)
+denom_depto <- union_all(denom_depto,data.frame(residencia_departamento_id=0,residencia_departamento_nombre="Total país")) %>% arrange(residencia_departamento_id)
 
 #### CREA DF AGREGADO ####
 
@@ -205,7 +205,7 @@ dataMsal <- dataMsal %>%
 
 dataMsal_0 <- dataMsal_c
 dataMsal_0$residencia_departamento_id <- 0
-dataMsal_0$residencia_departamento_nombre <- "Total paÃ­s"
+dataMsal_0$residencia_departamento_nombre <- "Total país"
 
 dataMsal_c$residencia_departamento_id <- dataMsal_c$residencia_provincia_id
 dataMsal_c$residencia_departamento_nombre <- dataMsal_c$residencia_provincia_nombre
@@ -225,7 +225,7 @@ testeosyposit <- dataMsal_c %>%
   summarise(n= n()) %>%
 ungroup()%>%
   group_by(residencia_departamento_id,fecha)%>%
-  summarise(testeos= sum(n[grepl("criterio clinico-epidemiolÃ³gico", clasificacion)== "FALSE"]),
+  summarise(testeos= sum(n[grepl("criterio clinico-epidemiológico", clasificacion)== "FALSE"]),
             conf_lab = sum(n[grepl("confirmado por laboratorio", clasificacion)== "TRUE"]),
             positividad= round(conf_lab*100/testeos,2)) %>%
   select(- conf_lab)
@@ -235,7 +235,7 @@ ungroup()%>%
 dataMsal <- dataMsal %>%
        left_join(testeosyposit, by= c("residencia_departamento_id","fecha"))
 rm(dataMsal_c)
-#Genero el promedio de los Ãºltimos 7 dÃ­as en testeos y positividad
+#Genero el promedio de los últimos 7 días en testeos y positividad
 
 dataMsal <- dataMsal %>% 
        mutate(testeos= case_when(is.na(testeos)== TRUE ~ 0, TRUE ~ as.numeric(testeos)),
