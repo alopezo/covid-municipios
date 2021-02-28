@@ -9,8 +9,15 @@ library(shinythemes)
 library(reshape2)
 library(rlist)
 library(ggplot2)
-
-
+library(formattable)
+library(sparkline)
+library(dplyr)
+library(htmltools)
+library(stringr)
+library(kableExtra)
+library(shinyjs)
+library(shinyWidgets)
+library(schoolmath)
 
 load("Data/municipios.RData")
 load("Mapas/Mapas.Rdata")
@@ -22,6 +29,16 @@ dataMsal<-dataMsal %>% filter(residencia_departamento_id %in% c(63,294,476,505,5
 
 
 ui <- fluidPage(
+  tags$table('th {
+             text-align: left;
+            }'),
+  inlineCSS("
+            #html .table th {
+             text-align: left;
+            }
+
+            "),
+    useShinyjs(),
     theme = shinytheme("cerulean"),
     tags$head(HTML('<link rel="icon", href="ISO-IECS.png", type="image/png" />')),
     titlePanel(windowTitle = "COVID Municipios", title = ""),
@@ -40,11 +57,13 @@ ui <- fluidPage(
                     ),
                     column(9,
                            fluidRow(
-                             tags$h2("Proyecto COVID Municipios Bonaerenses")
-                           ),
+                             column(9,
+                             tags$h2("Proyecto COVID Municipios Bonaerenses"), align="center"
+                           )),
                            fluidRow(             
-                             p("Datos procesados a partir de información anonimizada del Sistema Nacional de Vigilancia en Salud (SNVS - SISA)"),
-                           ),
+                             column(9,
+                             p("Datos procesados a partir de información anonimizada del Sistema Nacional de Vigilancia en Salud (SNVS - SISA)"), align="center",
+                           )),
                            fluidRow(column(9, 
                              p(paste("Datos actualizados al: ",substring(max(dataMsal$fecha),9,10),substring(max(dataMsal$fecha),5,8),substring(max(dataMsal$fecha),1,4),sep="")),
                              align= "center"
@@ -53,14 +72,28 @@ ui <- fluidPage(
                 )
                 ),
                 hr(),
+                br(),
+                h2("Resumen de indicadores por departamento"),
+                br(),
+                fluidRow(column(12, align="center",htmlOutput("tabla_resumen"))),
+                br(),
+                
+                hr(),
+                br(),
+                h2(textOutput("titulo_depto")),
+                br(),
                 fluidRow(
                     column(12, align="center",
                         selectizeInput("select_depto",
                                    "Departamento:",
-                                   choices = unique(dataMsal$residencia_departamento_nombre)
+                                   choices = unique(dataMsal$residencia_departamento_nombre),
+                                   selected = "NULL"   
                                    )
                     ),
                 ),
+    
+                br(),
+                br(),
                 fluidRow(
                     column(12, align="center",
                         valueBoxOutput("poblacion", width = 3),
@@ -104,11 +137,14 @@ ui <- fluidPage(
                 ),
                 fluidRow(
                     column(2,
-                           selectInput("comparar",
+                           pickerInput("comparar",
                                        "Seleccionar comparación",
                                        choices = unique(dataMsal$residencia_departamento_nombre)
                                                       
-                                       ,multiple = T)),
+                                       ,multiple = T,
+                                       options = list(
+                                         `none-selected-text` = "Departamento"
+                                       ))),
                     column(9,
                        dygraphOutput("grafico1")
                    )
@@ -139,7 +175,7 @@ ui <- fluidPage(
                        )
                   )
                 ),
-                br()
+                br(), htmlOutput("html")
 )
 
 
@@ -147,13 +183,14 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
-
+  counter <<- c("")
+  
   
   
   observe({
    
     u_choices <- c(unique(dataMsal$residencia_departamento_nombre[dataMsal$residencia_departamento_nombre != input$select_depto]))
-    updateSelectInput(session,"comparar","Seleccionar comparación",choices=u_choices, selected="")
+    updatePickerInput(session,"comparar","Seleccionar comparación",choices=u_choices, selected="")
 
   })
     
@@ -294,7 +331,7 @@ graf <- ggplot()+
     
     #Armo un data reactive    
     
-    data <- reactive({
+    data2 <- reactive({
         
         data <- dataMsal %>% filter(residencia_departamento_nombre == input$select_depto & fecha== max(dataMsal$fecha))
     
@@ -311,7 +348,7 @@ graf <- ggplot()+
     output$positivos <- renderValueBox({
       
       valueBox(
-        value= data() %>% dplyr::select(casos_acumulados),
+        value= data2() %>% dplyr::select(casos_acumulados),
         subtitle = "Total Positivos",
         color = "black"
       )
@@ -324,7 +361,7 @@ graf <- ggplot()+
     output$defunciones <- renderValueBox({
       
       valueBox(
-        value= data() %>% dplyr::select(muertes_acumuladas),
+        value= data2() %>% dplyr::select(muertes_acumuladas),
         subtitle = "Total defunciones",
         color = "black"
       )
@@ -386,10 +423,12 @@ graf <- ggplot()+
       }
     }
     output$tasa <- renderValueBox({
-        valueBox(
-        value = round(data() %>% dplyr::select(incidencia_14d),2),
+        
+      x=data2()
+      valueBox(
+        value = round(data2() %>% dplyr::select(incidencia_14d),2),
         subtitle = "Tasa por 100.000 hab. (últ. 14 días)",
-        color = getTasaColor(round(data() %>% dplyr::select(incidencia_14d),2),pobdeptos %>% filter(nomdep== input$select_depto) %>% dplyr::select(poblacion))
+        color = getTasaColor(round(data2() %>% dplyr::select(incidencia_14d),2),pobdeptos %>% filter(nomdep== input$select_depto) %>% dplyr::select(poblacion))
       )
     })
     
@@ -405,9 +444,9 @@ graf <- ggplot()+
     }
     output$positividad <- renderValueBox({
       valueBox(
-        value= paste(round(data() %>% dplyr::select(positividad_7),2),"%"),
+        value= paste(round(data2() %>% dplyr::select(positividad_7),2),"%"),
         subtitle = "Positividad de los tests (últ. 7 días)",
-        color = getPositividadColor(round(data() %>% dplyr::select(positividad_7),2))
+        color = getPositividadColor(round(data2() %>% dplyr::select(positividad_7),2))
       )
     })
     
@@ -415,7 +454,7 @@ graf <- ggplot()+
     
     output$testeos <- renderValueBox({
       valueBox(
-        value= round(data() %>% dplyr::select(testeos_7),2),
+        value= round(data2() %>% dplyr::select(testeos_7),2),
         subtitle = "Cantidad de testeos (promedio 7 días)",
         color = "black"
       )
@@ -443,9 +482,9 @@ graf <- ggplot()+
     }
     output$variacion_casos <- renderValueBox({
       valueBox(
-        value= paste(round(data() %>% dplyr::select(`% cambio`),2),"%"),
+        value= paste(round(data2() %>% dplyr::select(`% cambio`),2),"%"),
         subtitle = "Variación de casos a 7 días",
-        color = getVariacionPorcentualColor(round(data() %>% dplyr::select(`% cambio`),2))
+        color = getVariacionPorcentualColor(round(data2() %>% dplyr::select(`% cambio`),2))
       )
     })
       
@@ -486,17 +525,115 @@ graf <- ggplot()+
         write.csv2(descarga(), file, row.names = F)
       }
     )
-     
+
+datos_resumen <- reactive({
+
+    dataMsal %>% 
+    group_by(residencia_departamento_nombre) %>%
+    summarise(`Casos acumulados`=sum(casos),
+              `Incidencia acumulada (por 100.000)`=round(sum(casos)/mean(poblacion_depto)*100000,1),
+              `Muertes acumuladas`=sum(muertes),
+              `Tasa de mortalidad (por 100.000)`=round(sum(muertes)/mean(poblacion_depto)*100000,1),
+              `Tasa de letalidad (%)`=round(sum(muertes)/sum(casos)*100,digits=1),
+              Rt=round(last(R_semana),2)
+              ) %>%
+    rename(Departamento=residencia_departamento_nombre)
+
+})    
+
+output$tabla_resumen <- renderUI({
+
+  datos_res <- cbind(datos_resumen(),
+                link=as.character(actionLink('send', 'Ver detalles')))
+  datos_res$link = str_replace(datos_res$link,"send",paste0('send','_',datos_res$Departamento))
+  
+  
+  colnames(datos_res)[8] <- " "
+  
+  get_color_tile <- function (x,y,c) {
     
+    if (is.even(nrow(x)))
+    {
+      m <- median(x[,y])
+      v <- x[,y]
+      menor <- index(v)[v<m]
+      mayor <- index(v)[v>m]
+      
+      if (c=="menor") {return(menor)} else {return(mayor)} 
+      
+    } else
+    
+    {m <- median(x[,y])
+    v <- x[,y]
+    menor <- index(v)[v<m]
+    mayor <- index(v)[v>=m]
+    
+    if (c=="menor") {return(menor)} else {return(mayor)} }
+    
+    
+    index(x[,y])
+    }
+
+get_color_tile(datos_res,2,"menor")
+get_color_tile(datos_res,2,"mayor")
+  
+  formatt <- 
+  formattable(datos_res, align = c("l",rep("r", NCOL(datos_resumen()) - 1)), list(
+    `Departamento` = formatter("span", style = ~ style(color = "grey",font.weight = "bold", width=12)),
+    area(col = 2, row=get_color_tile(datos_res,2,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
+    area(col = 2, row=get_color_tile(datos_res,2,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
+    area(col = 3, row=get_color_tile(datos_res,3,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
+    area(col = 3, row=get_color_tile(datos_res,3,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
+    area(col = 4, row=get_color_tile(datos_res,4,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
+    area(col = 4, row=get_color_tile(datos_res,4,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
+    area(col = 5, row=get_color_tile(datos_res,5,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
+    area(col = 5, row=get_color_tile(datos_res,5,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
+    area(col = 6, row=get_color_tile(datos_res,6,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
+    area(col = 6, row=get_color_tile(datos_res,6,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
+    area(col = 7, row=get_color_tile(datos_res,7,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
+    area(col = 7, row=get_color_tile(datos_res,7,"mayor")) ~ color_tile("#fee0d2", "#de2d26")
+               
+                  # area(col = 2, row = c(1,3,5,7,8,9,10,13,14,15)) ~ color_tile("red", "white"),
+                  # area(col = 2, row = c(2,4,6,11,12)) ~ color_tile("white","green")
+                  # 
+    )) 
+  
+      code <- as.character(formatt)
+    
+    code <- HTML(str_replace_all(code,'<th style=\"text-align:right;\">','<th style=\"text-align:center;\">'))
+    code
+})
+
+
+#onclick('send_San Isidro',{runjs(texto())})
+
+texto1 <- paste0("onclick('send_",unique(dataMsal$residencia_departamento_nombre),"', {updateSelectInput(session,'select_depto','Departamento:',selected = '", unique(dataMsal$residencia_departamento_nombre),"')})")
+
+eval(parse(text=c(texto1)))
+
+observeEvent(input$select_depto,{
+  #browser()
+  
+  
+  if (length(counter)>1)
+  {
+  texto <- function (x) {as.character("document.getElementById('titulo_depto').scrollIntoView();")} 
+  runjs(texto())
+  }
+  counter <<- c(counter,input$select_depto)
+  })
+ 
+output$titulo_depto <- renderText("Indicadores del departamento") 
+
+
+
+
 }
-
-
-
-
-
 
 # Run the application 
 shinyApp(ui = ui, server = server)
 
 
-                                                                                                                  
+   
+
+
