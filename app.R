@@ -29,9 +29,7 @@ dataMsal<-dataMsal %>% filter(residencia_departamento_id %in% c(63,294,476,505,5
 
 
 ui <- fluidPage(
-  tags$table('th {
-             text-align: left;
-            }'),
+  tags$table(tags$th(align="center")),
   inlineCSS("
             #html .table th {
              text-align: left;
