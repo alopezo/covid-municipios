@@ -78,7 +78,7 @@ ui <- fluidPage(
                 
                 hr(),
                 br(),
-                h2(textOutput("titulo_depto")),
+                h2(htmlOutput("titulo_depto")),
                 br(),
                 fluidRow(
                     column(12, align="center",
@@ -578,23 +578,29 @@ get_color_tile(datos_res,2,"mayor")
   formatt <- 
   formattable(datos_res, align = c("l",rep("r", NCOL(datos_resumen()) - 1)), list(
     `Departamento` = formatter("span", style = ~ style(color = "grey",font.weight = "bold", width=12)),
-    area(col = 2, row=get_color_tile(datos_res,2,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
-    area(col = 2, row=get_color_tile(datos_res,2,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
-    area(col = 3, row=get_color_tile(datos_res,3,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
-    area(col = 3, row=get_color_tile(datos_res,3,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
-    area(col = 4, row=get_color_tile(datos_res,4,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
-    area(col = 4, row=get_color_tile(datos_res,4,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
-    area(col = 5, row=get_color_tile(datos_res,5,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
-    area(col = 5, row=get_color_tile(datos_res,5,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
-    area(col = 6, row=get_color_tile(datos_res,6,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
-    area(col = 6, row=get_color_tile(datos_res,6,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
-    area(col = 7, row=get_color_tile(datos_res,7,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
-    area(col = 7, row=get_color_tile(datos_res,7,"mayor")) ~ color_tile("#fee0d2", "#de2d26")
-               
+    # area(col = 2, row=get_color_tile(datos_res,2,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
+    # area(col = 2, row=get_color_tile(datos_res,2,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
+    # area(col = 3, row=get_color_tile(datos_res,3,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
+    # area(col = 3, row=get_color_tile(datos_res,3,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
+    # area(col = 4, row=get_color_tile(datos_res,4,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
+    # area(col = 4, row=get_color_tile(datos_res,4,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
+    # area(col = 5, row=get_color_tile(datos_res,5,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
+    # area(col = 5, row=get_color_tile(datos_res,5,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
+    # area(col = 6, row=get_color_tile(datos_res,6,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
+    # area(col = 6, row=get_color_tile(datos_res,6,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
+    # area(col = 7, row=get_color_tile(datos_res,7,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
+    # area(col = 7, row=get_color_tile(datos_res,7,"mayor")) ~ color_tile("#fee0d2", "#de2d26")
+    area(col = 2) ~ color_tile("#F7FBFF", "#2171B5"),
+    area(col = 3) ~ color_tile("#F7FBFF", "#2171B5"),     
+    area(col = 4) ~ color_tile("#F7FBFF", "#2171B5"),     
+    area(col = 5) ~ color_tile("#F7FBFF", "#2171B5"),     
+    area(col = 6) ~ color_tile("#F7FBFF", "#2171B5"),     
+    area(col = 7) ~ color_tile("#F7FBFF", "#2171B5")     
                   # area(col = 2, row = c(1,3,5,7,8,9,10,13,14,15)) ~ color_tile("red", "white"),
                   # area(col = 2, row = c(2,4,6,11,12)) ~ color_tile("white","green")
                   # 
     )) 
+  
   
       code <- as.character(formatt)
     
@@ -621,8 +627,12 @@ observeEvent(input$select_depto,{
   counter <<- c(counter,input$select_depto)
   })
  
-output$titulo_depto <- renderText("Indicadores del departamento") 
+#output$titulo_depto <- renderText("Indicadores del departamento") 
 
+output$titulo_depto <- renderUI({
+  
+  tags$a("Indicadores del departamento",href= '#')
+})
 
 
 
