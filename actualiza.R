@@ -9,12 +9,35 @@ library(stats)
 #setwd("D:/municipios")
 
 #### DESCARGA DATOS  ####
-urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos.csv'
-download.file(urlMsal, "Covid19Casos.csv")
+#urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos.csv'
+#download.file(urlMsal, "Covid19Casos.csv")
 
 #### IMPORTA DATOS ####
 dataMsal_c <-read.csv("Covid19Casos.csv", fileEncoding = "UTF-8") #dejo una version completa para testeos y positividad
-dataMsal<-dataMsal_c %>% filter(clasificacion_resumen=="Confirmado" & residencia_provincia_id==6)
+
+#Reasigno valor 0 de sin especificar departamento a 999
+
+dataMsal_c  <- dataMsal_c %>%
+    filter(residencia_provincia_id==6) %>%
+    mutate(residencia_departamento_id= case_when(residencia_departamento_id== 0 ~ 999,
+                                               TRUE ~ as.numeric(residencia_departamento_id)))
+
+
+#Genero el data de confirmados
+
+dataMsal<-dataMsal_c %>% filter(clasificacion_resumen=="Confirmado")
+
+
+##### TOTALES CRUDOS #####
+totales <- 
+  dataMsal_c %>% filter(clasificacion_resumen=="Confirmado") %>% 
+  group_by(residencia_departamento_nombre) %>%
+  dplyr::summarise(confirmados=sum(clasificacion_resumen=="Confirmado"),
+                   fallecidos=sum(fallecido=="SI")) %>% 
+  union_all(data.frame(residencia_departamento_nombre="Total Buenos Aires",
+                       confirmados=nrow(dataMsal_c[dataMsal_c$clasificacion_resumen=="Confirmado",]),
+                       fallecidos=nrow(dataMsal_c[dataMsal_c$fallecido=="SI" & dataMsal_c$clasificacion_resumen=="Confirmado",])))
+
 
 
 ##### COMPLETA FECHA DIAGNOSTICO CON OTRAS FECHAS #####
@@ -31,9 +54,12 @@ dataMsal$fecha_diagnostico[dataMsal$fecha_diagnostico==""] <- dataMsal$fecha[dat
 dataMsal$fecha <- NULL
 
 
+
+
 ##### NOMBRES DE PARTIDOS PARA APP #####
-denom_depto <- dataMsal %>% distinct(residencia_departamento_id, residencia_departamento_nombre) %>%
-                            arrange(residencia_departamento_id, residencia_departamento_nombre)
+denom_depto <- rbind(c("Total Buenos Aires",0),dataMsal %>% distinct(residencia_departamento_id, residencia_departamento_nombre) %>%
+                            arrange(residencia_departamento_id, residencia_departamento_nombre))
+                 
 
                             
 #### CREA DF AGREGADO ####
@@ -43,14 +69,28 @@ casos <- dataMsal %>%
             group_by(
                 fecha_diagnostico,
                 residencia_departamento_id) %>%
-            tally() %>% filter(fecha_diagnostico!="" & fecha_diagnostico>="2020-03-01" & residencia_departamento_id!=0)
+            tally() %>% filter(fecha_diagnostico!="" & fecha_diagnostico>="2020-03-01" & residencia_departamento_id!=999) %>%
+  ungroup() %>%
+  bind_rows(group_by(.,fecha_diagnostico)%>%
+            summarise(n= sum(n))%>%
+            mutate(residencia_departamento_id = 0)) %>%
+  arrange(residencia_departamento_id,fecha_diagnostico)
+              
+
 
 # df de muertes
 muertes <- dataMsal %>% 
               group_by(
                   fecha_fallecimiento,
                   residencia_departamento_id) %>%
-                  tally() %>% filter(fecha_fallecimiento!="" & fecha_fallecimiento>="2020-03-01" & residencia_departamento_id!=0)
+                  tally() %>% filter(fecha_fallecimiento!="" & fecha_fallecimiento>="2020-03-01" & residencia_departamento_id!=999) %>%
+  ungroup() %>%
+  bind_rows(group_by(.,fecha_fallecimiento)%>%
+              summarise(n= sum(n))%>%
+              mutate(residencia_departamento_id = 0)) %>%
+  arrange(residencia_departamento_id,fecha_fallecimiento)
+
+
 
 # formato fechas
 colnames(casos)[1] <- "fecha"
@@ -85,7 +125,6 @@ dataMsal <- dataMsal %>% arrange(residencia_departamento_id) %>%
   group_by(residencia_departamento_id) %>% 
   mutate(casos_acumulados=cumsum(casos), 
          muertes_acumuladas=cumsum(muertes))
-
 
 
 #### CALCULA R PROMEDIO ULTIMA SEMANA ####
@@ -124,10 +163,22 @@ dataMsal <- dataMsal %>%
 
 #### CALCULA INCIDENCIA CASOS Y MUERTES ULTIMOS 14 DIAS ####
 load("Data/poblacion.RData")
+
+#Genero poblacion total de provincias
+
+
+pobdeptos <- pobdeptos %>%
+  bind_rows(pobdeptos %>%
+            summarise(poblacion= sum(poblacion))%>%
+            mutate(coddep= 0, nomdep= "Total Buenos Aires"))%>%
+  arrange(coddep)
+
 for (depto in (pobdeptos$coddep))
 {dataMsal$poblacion_depto[dataMsal$residencia_departamento_id==depto] <- pobdeptos$poblacion[pobdeptos$coddep==depto]}
 dataMsal$incidencia_14d <- dataMsal$total_casos_14d/dataMsal$poblacion_depto*100000
 dataMsal$mortalidad_14d <- dataMsal$total_muertes_14d/dataMsal$poblacion_depto*100000
+
+
 
 #### CALCULA DIAS DE DUPLICACION ####
 source("Modulos/modulos.R", encoding = "UTF-8")
@@ -172,12 +223,16 @@ dataMsal_c$fecha_apertura <- as.Date(dataMsal_c$fecha_apertura,format = "%Y-%m-%
 
 #Genero los indicadores
 
+
 testeosyposit <- dataMsal_c %>%
-  filter(residencia_provincia_id== 6 & residencia_departamento_id != 0) %>%
+  filter(residencia_provincia_id== 6 & residencia_departamento_id != 999) %>%
   mutate(fecha= coalesce(fecha_diagnostico,fecha_inicio_sintomas,fecha_apertura))%>%
   group_by(fecha,clasificacion,residencia_departamento_id)%>%
   summarise(n= n()) %>%
-ungroup()%>%
+  bind_rows(group_by(.,fecha,clasificacion)%>%
+              summarise(n= sum(n))%>%
+              mutate(residencia_departamento_id= 0))%>%
+  ungroup()%>%
   group_by(residencia_departamento_id,fecha)%>%
   summarise(testeos= sum(n[grepl("criterio clinico-epidemiológico", clasificacion)== "FALSE"]),
             conf_lab = sum(n[grepl("confirmado por laboratorio", clasificacion)== "TRUE"]),
@@ -188,6 +243,8 @@ ungroup()%>%
 
 dataMsal <- dataMsal %>%
        left_join(testeosyposit, by= c("residencia_departamento_id","fecha"))
+
+
 rm(dataMsal_c)
 #Genero el promedio de los últimos 7 días en testeos y positividad
 
