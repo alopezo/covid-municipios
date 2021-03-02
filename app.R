@@ -25,7 +25,7 @@ load("Mapas/Mapas.Rdata")
 
 # Azul 049
 # Gral Belgrano 301
-dataMsal<-dataMsal %>% filter(residencia_departamento_id %in% c(63,294,476,505,547,616,651,700,707,756,784,791,826,301,277))
+#dataMsal<-dataMsal %>% filter(residencia_departamento_id %in% c(63,294,476,505,547,616,651,700,707,756,784,791,826,301,277))
 
 
 ui <- fluidPage(
@@ -346,7 +346,7 @@ graf <- ggplot()+
     output$positivos <- renderValueBox({
       
       valueBox(
-        value= data2() %>% dplyr::select(casos_acumulados),
+        value= totales %>% filter(residencia_departamento_nombre == input$select_depto) %>% select(confirmados),
         subtitle = "Total Positivos",
         color = "black"
       )
@@ -359,7 +359,7 @@ graf <- ggplot()+
     output$defunciones <- renderValueBox({
       
       valueBox(
-        value= data2() %>% dplyr::select(muertes_acumuladas),
+        value= totales %>% filter(residencia_departamento_nombre == input$select_depto) %>% select(fallecidos),
         subtitle = "Total defunciones",
         color = "black"
       )
@@ -491,18 +491,35 @@ graf <- ggplot()+
     output$mapa1 <- renderLeaflet({
         
     codigo <- min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])
-    leaflet(subset(Deptos, depto==codigo),options = leafletOptions(zoomControl = FALSE)) %>%
-            addProviderTiles(providers$CartoDB.Positron) %>%
-            addPolygons(stroke = T, weight=0.3) %>% 
-            addMarkers(~X1, ~X2, popup = ~as.character(""), label = ~as.character(departamen)) %>% setView(-60.096495787602436, -36.59018032729006, zoom = 5)  
-        
-    })
-    output$mapa2 <- renderLeaflet({
-        
-        codigo <- min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])
-        leaflet(subset(Deptos, depto==codigo),options = leafletOptions(zoomControl = FALSE)) %>% 
+    
+    if(codigo== 0){
+    leaflet(Deptos,options = leafletOptions(zoomControl = FALSE)) %>%
             addProviderTiles(providers$CartoDB.Positron) %>%
             addPolygons(stroke = T, weight=0.3)
+          
+            }
+    else{leaflet(subset(Deptos, depto==codigo),options = leafletOptions(zoomControl = FALSE)) %>%
+        addProviderTiles(providers$CartoDB.Positron) %>%
+        addPolygons(stroke = T, weight=0.3) %>% 
+        addMarkers(~X1, ~X2, popup = ~as.character(""), label = ~as.character(departamen)) %>% setView(-60.096495787602436, -36.59018032729006, zoom = 5)  
+      
+      
+    }
+    })
+    output$mapa2 <- renderLeaflet({
+    
+    codigo <- min(dataMsal$residencia_departamento_id[dataMsal$residencia_departamento_nombre==input$select_depto])
+        
+    if(codigo== 0){
+    leaflet(Deptos,options = leafletOptions(zoomControl = FALSE)) %>% 
+            addProviderTiles(providers$CartoDB.Positron) %>%
+            addPolygons(stroke = T, weight=0.3)
+    }
+    else{
+      leaflet(subset(Deptos, depto==codigo),options = leafletOptions(zoomControl = FALSE)) %>% 
+        addProviderTiles(providers$CartoDB.Positron) %>%
+        addPolygons(stroke = T, weight=0.3)
+    }
         
     })
   
@@ -526,7 +543,8 @@ graf <- ggplot()+
 
 datos_resumen <- reactive({
 
-    dataMsal %>% 
+    dataMsal %>%
+    mutate(residencia_departamento_nombre= relevel(as.factor(residencia_departamento_nombre), ref="Total Buenos Aires"))%>%
     group_by(residencia_departamento_nombre) %>%
     summarise(`Casos acumulados`=sum(casos),
               `Incidencia acumulada (por 100.000)`=round(sum(casos)/mean(poblacion_depto)*100000,1),
@@ -590,12 +608,12 @@ get_color_tile(datos_res,2,"mayor")
     # area(col = 6, row=get_color_tile(datos_res,6,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
     # area(col = 7, row=get_color_tile(datos_res,7,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
     # area(col = 7, row=get_color_tile(datos_res,7,"mayor")) ~ color_tile("#fee0d2", "#de2d26")
-    area(col = 2) ~ color_tile("#F7FBFF", "#8dcff2"),
-    area(col = 3) ~ color_tile("#F7FBFF", "#8dcff2"),     
-    area(col = 4) ~ color_tile("#F7FBFF", "#8dcff2"),     
-    area(col = 5) ~ color_tile("#F7FBFF", "#8dcff2"),     
-    area(col = 6) ~ color_tile("#F7FBFF", "#8dcff2"),     
-    area(col = 7) ~ color_tile("#F7FBFF", "#8dcff2")     
+    area(col = 2, row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),
+    area(col = 3,row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),     
+    area(col = 4,row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),     
+    area(col = 5,row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),     
+    area(col = 6,row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),     
+    area(col = 7,row= -1) ~ color_tile("#F7FBFF", "#8dcff2")     
                   # area(col = 2, row = c(1,3,5,7,8,9,10,13,14,15)) ~ color_tile("red", "white"),
                   # area(col = 2, row = c(2,4,6,11,12)) ~ color_tile("white","green")
                   # 
