@@ -18,6 +18,7 @@ library(kableExtra)
 library(shinyjs)
 library(shinyWidgets)
 library(schoolmath)
+library(geosphere)
 
 load("Data/municipios.RData")
 load("Mapas/Mapas.Rdata")
@@ -215,13 +216,14 @@ server <- function(input, output, session) {
         
         compara_con <- input$comparar
         
-        
-        
         data <- as.data.frame(cbind(dataMsal$residencia_departamento_nombre[dataMsal$residencia_departamento_nombre %in% c(input$select_depto,compara_con)], as.character(dataMsal$fecha[dataMsal$residencia_departamento_nombre %in% c(input$select_depto,compara_con)]),dataMsal[dataMsal$residencia_departamento_nombre %in% c(input$select_depto,compara_con),var]))
-        
+        data$V3 <- as.character(data$V3)
         data$V3 <- as.numeric(data$V3)
         colnames(data) <- c('depto','fecha','val')
-        #browser()
+        
+        
+        
+        
   
         data <- dcast(data = data, formula = fecha ~ depto, fun.aggregate = mean, value.var = "val")
         
