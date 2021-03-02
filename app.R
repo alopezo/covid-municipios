@@ -590,12 +590,12 @@ get_color_tile(datos_res,2,"mayor")
     # area(col = 6, row=get_color_tile(datos_res,6,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
     # area(col = 7, row=get_color_tile(datos_res,7,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
     # area(col = 7, row=get_color_tile(datos_res,7,"mayor")) ~ color_tile("#fee0d2", "#de2d26")
-    area(col = 2) ~ color_tile("#F7FBFF", "#2171B5"),
-    area(col = 3) ~ color_tile("#F7FBFF", "#2171B5"),     
-    area(col = 4) ~ color_tile("#F7FBFF", "#2171B5"),     
-    area(col = 5) ~ color_tile("#F7FBFF", "#2171B5"),     
-    area(col = 6) ~ color_tile("#F7FBFF", "#2171B5"),     
-    area(col = 7) ~ color_tile("#F7FBFF", "#2171B5")     
+    area(col = 2) ~ color_tile("#F7FBFF", "#8dcff2"),
+    area(col = 3) ~ color_tile("#F7FBFF", "#8dcff2"),     
+    area(col = 4) ~ color_tile("#F7FBFF", "#8dcff2"),     
+    area(col = 5) ~ color_tile("#F7FBFF", "#8dcff2"),     
+    area(col = 6) ~ color_tile("#F7FBFF", "#8dcff2"),     
+    area(col = 7) ~ color_tile("#F7FBFF", "#8dcff2")     
                   # area(col = 2, row = c(1,3,5,7,8,9,10,13,14,15)) ~ color_tile("red", "white"),
                   # area(col = 2, row = c(2,4,6,11,12)) ~ color_tile("white","green")
                   # 
