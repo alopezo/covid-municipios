@@ -23,140 +23,154 @@ load("Mapas/Mapas.Rdata")
 
 
 ui <- fluidPage(
-    theme = shinytheme("cerulean"),
-    tags$head(HTML('<link rel="icon", href="ISO-IECS.png", type="image/png" />')),
-    titlePanel(windowTitle = "COVID-CIIPS Argentina", title = ""),
-    tags$style(".small-box.bg-yellow { background-color: #fff39c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
-    tags$style(".small-box.bg-green { background-color: #a5ff9c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
-    tags$style(".small-box.bg-red { background-color: #ff9c9c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
-    tags$style(".small-box.bg-black { background-color: #ffffff !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
-                # Application title
-                fluidRow(
-                    column(3,
-                           fluidRow(
-                             column(12,
-                                    tags$a(
-                                      img(src="iecslogo.png", height = 66, width = 200),
-                                      href="https://www.iecs.org.ar",
-                                      target="_blank"
-                                    )
-                             )
-                           ),
-                           fluidRow(
-                             column(12,
-                                    tags$a(
-                                      img(src="CIPSlogo.png", height = 117, width = 200),
-                                      href="https://www.iecs.org.ar/ciips/",
-                                      target="_blank"
-                                    )
-                             )
-                           ),
-                     ),
-                    column(9,
-                           fluidRow(
-                             tags$h2("Tablero de control dinámico COVID-CIIPS Argentina")
-                           ),
-                           fluidRow(             
-                             p("Datos procesados a partir de información anonimizada del Sistema Nacional de Vigilancia en Salud (SNVS - SISA)"),
-                           ),
-                           fluidRow(column(9, 
-                             p(paste("Datos actualizados al: ",substring(max(dataMsal$fecha),9,10),substring(max(dataMsal$fecha),5,8),substring(max(dataMsal$fecha),1,4),sep="")),
-                             align= "center"
-                           ))
-                    
-                )
-                ),
-                hr(),
-                fluidRow(
-                    column(12, align="center",
-                        selectizeInput("select_depto",
-                                   "Jurisdicción:",
-                                   choices = unique(dataMsal$residencia_departamento_nombre)[unique(dataMsal$residencia_departamento_nombre)!="SIN ESPECIFICAR"]
-                                   )
-                    ),
-                ),
-                fluidRow(
-                    column(12, align="center",
-                        valueBoxOutput("poblacion", width = 3),
-                        valueBoxOutput("positivos", width = 3),
-                        valueBoxOutput("defunciones", width = 3),
-                        valueBoxOutput("testeos", width = 3)
+  tags$table(tags$th(align="center")),
+  inlineCSS("
+            #html .table th {
+             text-align: left;
+            }
+
+            "),
+  useShinyjs(),
+  theme = shinytheme("cerulean"),
+  tags$head(HTML('<link rel="icon", href="ISO-IECS.png", type="image/png" />')),
+  titlePanel(windowTitle = "COVID Municipios", title = ""),
+  tags$style(".small-box.bg-yellow { background-color: #fff39c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
+  tags$style(".small-box.bg-green { background-color: #a5ff9c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
+  tags$style(".small-box.bg-red { background-color: #ff9c9c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
+  tags$style(".small-box.bg-black { background-color: #ffffff !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
+  # Application title
+  fluidRow(
+    column(3, align="center",
+           tags$a(
+             img(src="CIPSlogo.png", height = 88, width = 150),
+             href="https://www.iecs.org.ar/ciips/",
+             target="_blank"
+           )
+    ),
+    column(9,
+           fluidRow(
+             column(9,
+                    tags$h2("Proyecto COVID Municipios Bonaerenses"), align="center"
+             )),
+           fluidRow(             
+             column(9,
+                    p("Datos procesados a partir de información anonimizada del Sistema Nacional de Vigilancia en Salud (SNVS - SISA)"), align="center",
+             )),
+           fluidRow(column(9, 
+                           p(paste("Datos actualizados al: ",substring(max(dataMsal$fecha),9,10),substring(max(dataMsal$fecha),5,8),substring(max(dataMsal$fecha),1,4),sep="")),
+                           align= "center"
+           ))
+           
+    )
+  ),
+  hr(),
+  br(),
+  h2("Resumen de indicadores por departamento"),
+  br(),
+  fluidRow(column(12, align="center",htmlOutput("tabla_resumen"))),
+  br(),
+  
+  hr(),
+  br(),
+  h2(htmlOutput("titulo_depto")),
+  br(),
+  fluidRow(
+    column(12, align="center",
+           selectizeInput("select_depto",
+                          "Departamento:",
+                          choices = unique(dataMsal$residencia_departamento_nombre),
+                          selected = "NULL"   
+           )
+    ),
+  ),
+  
+  br(),
+  br(),
+  fluidRow(
+    column(12, align="center",
+           valueBoxOutput("poblacion", width = 3),
+           valueBoxOutput("positivos", width = 3),
+           valueBoxOutput("defunciones", width = 3),
+           valueBoxOutput("testeos", width = 3)
+           
+           
+           
+    )
+  ),
+  br(),
+  fluidRow(
+    column(12, align="center",
+           valueBoxOutput("tasa", width = 3),
+           valueBoxOutput("r", width = 3),
+           valueBoxOutput("variacion_casos", width = 3),
+           valueBoxOutput("positividad", width = 3)
+    ),
+    br(),
+  ),
+  fluidRow(
+    column(12, align="center",
+           selectizeInput("select_var",
+                          "Variable:",
+                          choices = list(
+                            "Casos diarios" = 3,
+                            "Casos diarios (promedio 7 días)"=8,
+                            "Casos acumulados"=5,
+                            "Rt Diario"=7,
+                            "Defunciones diarias"= 4,
+                            "Defunciones diarias (promedio 7 días)"=9,
+                            "Defunciones acumuladas"=6,
+                            "Casos por 100.000 habitantes (últimos 14 días)"=13,
+                            "Muertes por 100.000 habitantes (últimos 14 días)."=14,
+                            "% de cambio casos nuevos ultima semana vs. semana previa"=16,
+                            "Cantidad de testeos (promedio 7 días)"=17,
+                            "Indice de positividad (promedio 7 días)"= 18
+                          ))
+    ),
+  ),
+  fluidRow(
+    column(2,
+           pickerInput("comparar",
+                       "Seleccionar comparación",
+                       choices = unique(dataMsal$residencia_departamento_nombre)
                        
-                        
-                   
-                    )
-                ),
-                br(),
-                fluidRow(
-                    column(12, align="center",
-                    valueBoxOutput("tasa", width = 3),
-                    valueBoxOutput("r", width = 3),
-                    valueBoxOutput("variacion_casos", width = 3),
-                    valueBoxOutput("positividad", width = 3)
-                ),
-                br(),
-                ),
-                fluidRow(
-                    column(12, align="center",
-                           selectizeInput("select_var",
-                                          "Variable:",
-                                          choices = list(
-                                              "Casos diarios" = 3,
-                                              "Casos diarios (promedio 7 días)"=8,
-                                              "Casos acumulados"=5,
-                                              "Rt Diario"=7,
-                                              "Defunciones diarias"= 4,
-                                              "Defunciones diarias (promedio 7 días)"=9,
-                                              "Defunciones acumuladas"=6,
-                                              "Casos por 100.000 habitantes (últimos 14 días)"=13,
-                                              "Muertes por 100.000 habitantes (últimos 14 días)."=14,
-                                              "% de cambio casos nuevos ultima semana vs. semana previa"=16,
-                                              "Cantidad de testeos (promedio 7 días)"=17,
-                                              "Indice de positividad (promedio 7 días)"= 18
-                                          ))
-                    ),
-                ),
-                fluidRow(
-                    column(2,
-                           pickerInput(
-                             inputId = "comparar",
-                             label = "Seleccionar comparación", 
-                             choices = unique(dataMsal$residencia_departamento_nombre),
-                             multiple = TRUE,
-                             options = list('none-selected-text'= "Jurisdicción")
-                           )),
-                    column(9,
-                       dygraphOutput("grafico1")
-                   )
-                ),
-                br(),
-                fluidRow(
-                  column(12, align="center",
-                         downloadButton("download", label = "Descargar datos"),
-                         downloadButton("btn_download", "Descargar gráfico")
-                  )
-                ),
-                br(),
-                fluidRow(
-                    column(1),
-                    column(5,
-                       leafletOutput("mapa1")),
-                    column(5,
-                          leafletOutput("mapa2")
-                    )
-                ),
-                br(),
-                hr(),
-                fluidRow( class = "text-center",
-                  p(style = "margin-bottom: 2px; font-size: 12px;  color: #67c97c;", 
-                    HTML(paste0("<i>Esta herramienta fue desarrollada por el <a href=\"https://www.iecs.org.ar/ciips/\" target=\"_blank\">CIIPS</a> &copy;2020.
+                       ,multiple = T,
+                       options = list(
+                         `none-selected-text` = "Departamento"
+                       ))),
+    column(9,
+           dygraphOutput("grafico1")
+    )
+  ),
+  br(),
+  fluidRow(
+    column(12, align="center",
+           downloadButton("download", label = "Descargar datos"),
+           downloadButton("download_graph", "Descargar gráfico")
+    )
+  ),
+  br(),
+  fluidRow(
+    column(1),
+    column(5,
+           leafletOutput("mapa1")),
+    column(5,
+           leafletOutput("mapa2")
+    )
+  ),
+  br(),
+  hr(),
+  fluidRow( class = "text-center",
+            p(style = "margin-bottom: 2px; font-size: 12px;  color: #67c97c;", 
+              HTML(paste0("<i>Esta herramienta fue desarrollada por el <a href=\"https://www.iecs.org.ar/ciips/\" target=\"_blank\">CIIPS</a> &copy;2020.
                         <br>Contacto:</i> <a href=\"mailto:ciips@iecs.org.ar?
                         subject='Modelo COVID-19'\">ciips@iecs.org.ar</a>")
-                       )
-                  )
-                ),
-                br()
+              )
+            )
+  ),
+  br(), htmlOutput("html")
 )
+
+
 
 
 
@@ -164,7 +178,7 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
 
-  
+  counter <<- c("")
   
   observe({
    
@@ -523,7 +537,96 @@ grafico <- reactive({
         write.csv2(descarga(), file, row.names = F)
       }
     )
-     
+  
+    
+
+    datos_resumen <- reactive({
+
+      
+     dataMsal %>%  
+        group_by(residencia_departamento_nombre, residencia_departamento_id) %>%
+        summarise(`Casos acumulados`=sum(casos),
+                  `Incidencia acumulada (por 100.000)`=round(sum(casos)/mean(poblacion_depto)*100000,1),
+                  `Muertes acumuladas`=sum(muertes),
+                  `Tasa de mortalidad (por 100.000)`=round(sum(muertes)/mean(poblacion_depto)*100000,1),
+                  `Tasa de letalidad (%)`=round(sum(muertes)/sum(casos)*100,digits=1),
+                  Rt=round(last(R_semana),2)
+        ) %>%
+        rename(Departamento=residencia_departamento_nombre) %>% arrange(residencia_departamento_id) %>% select(-residencia_departamento_id) %>% filter(Departamento!="SIN ESPECIFICAR")
+        
+    })    
+    
+    output$tabla_resumen <- renderUI({
+      browser()
+      
+      datos_res <- cbind(datos_resumen(),
+                         link=as.character(actionLink('send', 'Ver detalles')))
+      datos_res$link = str_replace(datos_res$link,"send",paste0('send','_',datos_res$Departamento))
+      
+      
+      colnames(datos_res)[8] <- " "
+      
+      
+      formatt <- 
+        formattable(datos_res, align = c("l",rep("r", NCOL(datos_resumen()) - 1)), list(
+          `Departamento` = formatter("span", style = ~ style(color = "grey",font.weight = "bold", width=12)),
+          # area(col = 2, row=get_color_tile(datos_res,2,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
+          # area(col = 2, row=get_color_tile(datos_res,2,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
+          # area(col = 3, row=get_color_tile(datos_res,3,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
+          # area(col = 3, row=get_color_tile(datos_res,3,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
+          # area(col = 4, row=get_color_tile(datos_res,4,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
+          # area(col = 4, row=get_color_tile(datos_res,4,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
+          # area(col = 5, row=get_color_tile(datos_res,5,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
+          # area(col = 5, row=get_color_tile(datos_res,5,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
+          # area(col = 6, row=get_color_tile(datos_res,6,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
+          # area(col = 6, row=get_color_tile(datos_res,6,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
+          # area(col = 7, row=get_color_tile(datos_res,7,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
+          # area(col = 7, row=get_color_tile(datos_res,7,"mayor")) ~ color_tile("#fee0d2", "#de2d26")
+          
+          area(col = 2, row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),
+          area(col = 3, row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),     
+          area(col = 4, row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),     
+          area(col = 5, row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),     
+          area(col = 6, row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),     
+          area(col = 7, row= -1) ~ color_tile("#F7FBFF", "#8dcff2")     
+          # area(col = 2, row = c(1,3,5,7,8,9,10,13,14,15)) ~ color_tile("red", "white"),
+          # area(col = 2, row = c(2,4,6,11,12)) ~ color_tile("white","green")
+          # 
+        )) 
+      
+      
+      code <- as.character(formatt)
+      
+      code <- HTML(str_replace_all(code,'<th style=\"text-align:right;\">','<th style=\"text-align:center;\">'))
+      code
+    })
+    
+    
+    #onclick('send_San Isidro',{runjs(texto())})
+    
+    texto1 <- paste0("onclick('send_",unique(dataMsal$residencia_departamento_nombre),"', {updateSelectInput(session,'select_depto','Departamento:',selected = '", unique(dataMsal$residencia_departamento_nombre),"')})")
+    
+    eval(parse(text=c(texto1)))
+    
+    observeEvent(input$select_depto,{
+      #browser()
+      
+      
+      if (length(counter)>1)
+      {
+        texto <- function (x) {as.character("document.getElementById('titulo_depto').scrollIntoView();")} 
+        runjs(texto())
+      }
+      counter <<- c(counter,input$select_depto)
+    })
+    
+    #output$titulo_depto <- renderText("Indicadores del departamento") 
+    
+    output$titulo_depto <- renderUI({
+      
+      tags$a("Indicadores del departamento",href= '#')
+    })
+    
     
 }
 
