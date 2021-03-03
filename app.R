@@ -219,7 +219,9 @@ server <- function(input, output, session) {
         
         data <- as.data.frame(cbind(dataMsal$residencia_departamento_nombre[dataMsal$residencia_departamento_nombre %in% c(input$select_depto,compara_con)], as.character(dataMsal$fecha[dataMsal$residencia_departamento_nombre %in% c(input$select_depto,compara_con)]),dataMsal[dataMsal$residencia_departamento_nombre %in% c(input$select_depto,compara_con),var]))
         
+        data$V3 <- as.character(data$V3)
         data$V3 <- as.numeric(data$V3)
+        
         colnames(data) <- c('depto','fecha','val')
         #browser()
   
