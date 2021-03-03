@@ -80,7 +80,7 @@ ui <- fluidPage(
   ,
   hr(),
   br(),
-  h2("Resumen de indicadores por departamento"),
+  h2("Resumen de indicadores por jurisdicción"),
   br(),
   fluidRow(column(12, align="center",htmlOutput("tabla_resumen"))),
   br(),
