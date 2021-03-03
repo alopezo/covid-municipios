@@ -643,7 +643,7 @@ grafico <- reactive({
     
     output$titulo_depto <- renderUI({
       
-      tags$a("Indicadores de la jurisdicción",href= '#')
+      tags$p("Indicadores de la jurisdicción",tags$a(style="font-size: 14px;  color: #67c97c;","(volver a la tabla)",href= '#'))
     })
     
     
