@@ -633,7 +633,7 @@ observeEvent(input$select_depto,{
 
 output$titulo_depto <- renderUI({
   
-  tags$a("Indicadores del departamento",href= '#')
+  tags$p("Indicadores del departamento",tags$a(style="font-size: 14px;  color: #67c97c;","(volver a la tabla)",href= '#'))
 })
 
 
