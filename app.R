@@ -577,10 +577,9 @@ grafico <- reactive({
     })    
     
     output$tabla_resumen <- renderUI({
-      #browser()
+    # browser()
       
-      datos_res <- cbind(datos_resumen(),
-                         link=as.character(actionLink('send', 'Ver detalles')))
+      datos_res <- cbind(datos_resumen(), link=rep(as.character(actionLink('send', 'Ver detalles')),25))
       datos_res$link = str_replace(datos_res$link,"send",paste0('send','_',datos_res$Jurisdicción))
       
       
