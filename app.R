@@ -11,6 +11,10 @@ library(rlist)
 library(ggplot2)
 library(scales)
 library(shinyWidgets)
+library(shinyjs)
+library(stringr)
+library(formattable)
+
 
 load("Data/municipios.RData")
 load("Mapas/Mapas.Rdata")
@@ -33,36 +37,47 @@ ui <- fluidPage(
   useShinyjs(),
   theme = shinytheme("cerulean"),
   tags$head(HTML('<link rel="icon", href="ISO-IECS.png", type="image/png" />')),
-  titlePanel(windowTitle = "COVID Municipios", title = ""),
+  titlePanel(windowTitle = "COVID-CIIPS Argentina", title = ""),
   tags$style(".small-box.bg-yellow { background-color: #fff39c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
   tags$style(".small-box.bg-green { background-color: #a5ff9c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
   tags$style(".small-box.bg-red { background-color: #ff9c9c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
   tags$style(".small-box.bg-black { background-color: #ffffff !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
   # Application title
   fluidRow(
-    column(3, align="center",
-           tags$a(
-             img(src="CIPSlogo.png", height = 88, width = 150),
-             href="https://www.iecs.org.ar/ciips/",
-             target="_blank"
-           )
-    ),
-    column(9,
+    column(3,
            fluidRow(
-             column(9,
-                    tags$h2("Proyecto COVID Municipios Bonaerenses"), align="center"
-             )),
-           fluidRow(             
-             column(9,
-                    p("Datos procesados a partir de información anonimizada del Sistema Nacional de Vigilancia en Salud (SNVS - SISA)"), align="center",
-             )),
-           fluidRow(column(9, 
+             column(4,
+                    tags$a(
+                      img(src="iecslogo.png", height = 66, width = 200),
+                      href="https://www.iecs.org.ar",
+                      target="_blank"
+                    )
+             )
+           ),
+           fluidRow(
+             column(8,
+                    tags$a(
+                      img(src="CIPSlogo.png", height = 117, width = 200),
+                      href="https://www.iecs.org.ar/ciips/",
+                      target="_blank"
+                    )
+             )
+           ),
+    ),
+    column(6,
+           
+             tags$h2("Tablero de control dinámico COVID-CIIPS Argentina")
+           ,             
+             p("Datos procesados a partir de información anonimizada del Sistema Nacional de Vigilancia en Salud (SNVS - SISA)"),
+           
+           
                            p(paste("Datos actualizados al: ",substring(max(dataMsal$fecha),9,10),substring(max(dataMsal$fecha),5,8),substring(max(dataMsal$fecha),1,4),sep="")),
-                           align= "center"
-           ))
+    ),                
+           align= "center"
+           
            
     )
-  ),
+  ,
   hr(),
   br(),
   h2("Resumen de indicadores por departamento"),
@@ -77,7 +92,7 @@ ui <- fluidPage(
   fluidRow(
     column(12, align="center",
            selectizeInput("select_depto",
-                          "Departamento:",
+                          "Jurisdicción:",
                           choices = unique(dataMsal$residencia_departamento_nombre),
                           selected = "NULL"   
            )
@@ -105,8 +120,11 @@ ui <- fluidPage(
            valueBoxOutput("variacion_casos", width = 3),
            valueBoxOutput("positividad", width = 3)
     ),
-    br(),
+    
   ),
+  br(),
+  br(),
+  br(),
   fluidRow(
     column(12, align="center",
            selectizeInput("select_var",
@@ -127,6 +145,8 @@ ui <- fluidPage(
                           ))
     ),
   ),
+  br(),
+  br(),
   fluidRow(
     column(2,
            pickerInput("comparar",
@@ -135,7 +155,7 @@ ui <- fluidPage(
                        
                        ,multiple = T,
                        options = list(
-                         `none-selected-text` = "Departamento"
+                         `none-selected-text` = "Jurisdicción"
                        ))),
     column(9,
            dygraphOutput("grafico1")
@@ -552,16 +572,16 @@ grafico <- reactive({
                   `Tasa de letalidad (%)`=round(sum(muertes)/sum(casos)*100,digits=1),
                   Rt=round(last(R_semana),2)
         ) %>%
-        rename(Departamento=residencia_departamento_nombre) %>% arrange(residencia_departamento_id) %>% select(-residencia_departamento_id) %>% filter(Departamento!="SIN ESPECIFICAR")
+        rename(Jurisdicción=residencia_departamento_nombre) %>% arrange(residencia_departamento_id) %>% select(-residencia_departamento_id) %>% filter(Jurisdicción!="SIN ESPECIFICAR")
         
     })    
     
     output$tabla_resumen <- renderUI({
-      browser()
+      #browser()
       
       datos_res <- cbind(datos_resumen(),
                          link=as.character(actionLink('send', 'Ver detalles')))
-      datos_res$link = str_replace(datos_res$link,"send",paste0('send','_',datos_res$Departamento))
+      datos_res$link = str_replace(datos_res$link,"send",paste0('send','_',datos_res$Jurisdicción))
       
       
       colnames(datos_res)[8] <- " "
@@ -569,7 +589,7 @@ grafico <- reactive({
       
       formatt <- 
         formattable(datos_res, align = c("l",rep("r", NCOL(datos_resumen()) - 1)), list(
-          `Departamento` = formatter("span", style = ~ style(color = "grey",font.weight = "bold", width=12)),
+          `Jurisdicción` = formatter("span", style = ~ style(color = "grey",font.weight = "bold", width=12)),
           # area(col = 2, row=get_color_tile(datos_res,2,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
           # area(col = 2, row=get_color_tile(datos_res,2,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
           # area(col = 3, row=get_color_tile(datos_res,3,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
@@ -604,7 +624,7 @@ grafico <- reactive({
     
     #onclick('send_San Isidro',{runjs(texto())})
     
-    texto1 <- paste0("onclick('send_",unique(dataMsal$residencia_departamento_nombre),"', {updateSelectInput(session,'select_depto','Departamento:',selected = '", unique(dataMsal$residencia_departamento_nombre),"')})")
+    texto1 <- paste0("onclick('send_",unique(dataMsal$residencia_departamento_nombre),"', {updateSelectInput(session,'select_depto','Jurisdicción:',selected = '", unique(dataMsal$residencia_departamento_nombre),"')})")
     
     eval(parse(text=c(texto1)))
     
@@ -620,11 +640,11 @@ grafico <- reactive({
       counter <<- c(counter,input$select_depto)
     })
     
-    #output$titulo_depto <- renderText("Indicadores del departamento") 
+    #output$titulo_depto <- renderText("Indicadores de la jurisdicción") 
     
     output$titulo_depto <- renderUI({
       
-      tags$a("Indicadores del departamento",href= '#')
+      tags$a("Indicadores de la jurisdicción",href= '#')
     })
     
     
