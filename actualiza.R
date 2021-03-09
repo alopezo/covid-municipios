@@ -9,12 +9,16 @@ library(stats)
 #setwd("D:/municipios")
 
 #### DESCARGA DATOS  ####
-urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos.csv'
-download.file(urlMsal, "Covid19Casos.csv")
+#urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos.csv'
+#download.file(urlMsal, "Covid19Casos.csv")
 
 #### IMPORTA DATOS ####
 dataMsal_c <-read.csv("Covid19Casos.csv", fileEncoding = "UTF-8") #dejo una version completa para testeos y positividad
-dataMsal<-dataMsal_c %>% filter(clasificacion_resumen=="Confirmado" & residencia_provincia_id==6)
+dataMsal<-dataMsal_c %>% filter(clasificacion_resumen=="Confirmado" & residencia_provincia_id==6) %>%
+mutate(residencia_departamento_id= case_when(residencia_departamento_id < 7~ 999,
+                                             TRUE ~ as.numeric(residencia_departamento_id)))%>%
+filter(residencia_departamento_id != 999)
+
 
 
 ##### COMPLETA FECHA DIAGNOSTICO CON OTRAS FECHAS #####
@@ -106,7 +110,6 @@ for (depto in unique(dataMsal$residencia_departamento_id))
 }
 dataMsal <- cbind(dataMsal,R_semana=R_semana)
 
-
 #### CALCULA PROMEDIO CASOS Y MUERTES ULTIMA SEMANA ####
 
 dataMsal <- dataMsal %>% 
@@ -141,6 +144,8 @@ for (departamento in unique(dataMsal$residencia_departamento_id))
   fecha <- c(as.Date(fecha), max(dataMsal$fecha))
   dd <- c(dd, get_dias_dupl(dataMsal, max(dataMsal$fecha), 7, departamento)[1])
 }
+
+
 
 diasDuplicacion <- data.frame(residencia_depto_if=depto, fecha=fecha, dias_duplicacion=dd)
 
