@@ -245,8 +245,23 @@ dataMsal <- dataMsal %>%
   select(-testeos,-positividad) %>%
   as.data.frame()
 
-     
+##### Vacunas #####
+vacunas <- read.csv2('https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19VacunasAgrupadas.csv', 
+                     header=T, 
+                     encoding = 'UTF-8', 
+                     sep=',')
 
+vacunas$dosis_total <- vacunas$primera_dosis_cantidad+vacunas$segunda_dosis_cantidad
+
+vacunas <- rbind(vacunas,
+vacunas %>% group_by(vacuna_nombre) %>%
+            summarise(primera_dosis_cantidad=sum(primera_dosis_cantidad),
+                      segunda_dosis_cantidad=sum(segunda_dosis_cantidad),
+                      dosis_total=sum(dosis_total)) %>%
+            mutate(jurisdiccion_codigo_indec=0,
+                   jurisdiccion_nombre="Total país") %>%
+            dplyr::select(jurisdiccion_codigo_indec,jurisdiccion_nombre,vacuna_nombre,primera_dosis_cantidad,segunda_dosis_cantidad,dosis_total)
+)
 ##### GRABA RDATA PARA APP #####
 save.image(file="Data/municipios.RData") 
 

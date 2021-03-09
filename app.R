@@ -1,3 +1,4 @@
+library(plotly)
 library(shiny)
 library(dplyr)
 library(dygraphs)
@@ -14,36 +15,40 @@ library(shinyWidgets)
 library(shinyjs)
 library(stringr)
 library(formattable)
-
+library(aos)
+library(shinyjqui)
 
 load("Data/municipios.RData")
 load("Mapas/Mapas.Rdata")
 
 
-
 # Azul 049
 # Gral Belgrano 301
 #dataMsal<-dataMsal %>% filter(residencia_departamento_id %in% c(63,294,476,505,547,616,651,700,707,756,784,791,826,301))
-
-
+fade <- function(x,y=3000) {aos(element=x, animation="fade-in", duration=y)}
+js <- "
+$(document).ready(function(){
+  $('#plotContainer').on('show', function(event){
+    $(this).css('opacity', 0).animate({opacity: 1}, {duration: 1000});
+  });
+});
+"
 ui <- fluidPage(
-  tags$table(tags$th(align="center")),
-  inlineCSS("
-            #html .table th {
-             text-align: left;
-            }
-
-            "),
+  
   useShinyjs(),
   theme = shinytheme("cerulean"),
+  use_aos(disable = "mobile"),
+  tags$head(tags$style(HTML('#select_depto+ div>.selectize-dropdown{bottom: 100% !important; top:auto!important;}'))),
+  tags$head(tags$style(HTML('#select_var+ div>.selectize-dropdown{bottom: 100% !important; top:auto!important;}'))),
   tags$head(HTML('<link rel="icon", href="ISO-IECS.png", type="image/png" />')),
+  
   titlePanel(windowTitle = "COVID-CIIPS Argentina", title = ""),
   tags$style(".small-box.bg-yellow { background-color: #fff39c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
   tags$style(".small-box.bg-green { background-color: #a5ff9c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
   tags$style(".small-box.bg-red { background-color: #ff9c9c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
   tags$style(".small-box.bg-black { background-color: #ffffff !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
   # Application title
-  fluidRow(
+  fade(fluidRow(
     column(3,
            fluidRow(
              column(4,
@@ -76,29 +81,28 @@ ui <- fluidPage(
            align= "center"
            
            
-    )
+    ))
   ,
   hr(),
   br(),
-  h2("Resumen de indicadores por jurisdicción"),
+  fade(h2("Resumen de indicadores por jurisdicción")),
   br(),
-  fluidRow(column(12, align="center",htmlOutput("tabla_resumen"))),
+  fade(fluidRow(column(12, align="center",htmlOutput("tabla_resumen"))),y=3000),
   br(),
   
   hr(),
   br(),
-  h2(htmlOutput("titulo_depto")),
+  fade(h2(htmlOutput("titulo_depto"))),
   br(),
-  fluidRow(
+  fade(fluidRow(
     column(12, align="center",
-           selectizeInput("select_depto",
+            selectizeInput("select_depto",
                           "Jurisdicción:",
                           choices = unique(dataMsal$residencia_departamento_nombre),
-                          selected = "NULL"   
-           )
+                          selected = "NULL")
+           
     ),
-  ),
-  
+  )),
   br(),
   br(),
   fluidRow(
@@ -125,7 +129,7 @@ ui <- fluidPage(
   br(),
   br(),
   br(),
-  fluidRow(
+  fade(fluidRow(
     column(12, align="center",
            selectizeInput("select_var",
                           "Variable:",
@@ -144,7 +148,7 @@ ui <- fluidPage(
                             "Indice de positividad (promedio 7 días)"= 18
                           ))
     ),
-  ),
+  )),
   br(),
   br(),
   fluidRow(
@@ -169,14 +173,37 @@ ui <- fluidPage(
     )
   ),
   br(),
+  hr(),
+  br(),
+  h2(htmlOutput("titulo_vacunas")),
   fluidRow(
     column(1),
     column(5,
-           leafletOutput("mapa1")),
+           plotlyOutput("vacunas1")
+           #leafletOutput("mapa1")
+           ),
     column(5,
-           leafletOutput("mapa2")
+           plotlyOutput("vacunas2")
+           #leafletOutput("mapa2")
     )
   ),
+  br(),
+  br(),
+  fluidRow(
+    column(1),
+    column(5,
+           plotlyOutput("vacunas3")
+           #leafletOutput("mapa1")
+    )
+    ,
+    column(5,
+           plotlyOutput("vacunas4"), align ="center"
+           #leafletOutput("mapa2")
+    )
+  ),
+  br(),
+  br(),
+  br(),
   br(),
   hr(),
   fluidRow( class = "text-center",
@@ -187,8 +214,21 @@ ui <- fluidPage(
               )
             )
   ),
-  br(), htmlOutput("html")
-)
+  br(), htmlOutput("html"), 
+  
+  
+  fade(absolutePanel(HTML('<link rel="stylesheet" href="#" />
+
+<a href="#" class="btn btn-info btn-sm">Volver al inicio</a>'), bottom = 10, right = 8, fixed = TRUE) ),
+  
+  fade(absolutePanel(HTML(paste0('<p style="text-align: justify;"><p><span style="color: #99ccff;">Jurisdicci&oacute;n seleccionada</span>: <strong>',textOutput("seleccion"),'</strong></p>')), bottom = 5, right = 150, fixed = TRUE) ),
+  
+  fade(absolutePanel(tags$a(
+    img(src="CIPSlogo.png", height = 58.5, width = 100),
+    href="https://www.iecs.org.ar/ciips/",
+    target="_blank"
+  ), bottom = 10, left  = 8, fixed = TRUE)
+))
 
 
 
@@ -577,17 +617,25 @@ grafico <- reactive({
     })    
     
     output$tabla_resumen <- renderUI({
-    # browser()
-      
-      datos_res <- cbind(datos_resumen(), link=rep(as.character(actionLink('send', 'Ver detalles')),25))
+
+      vac <- vacunas %>% 
+        group_by(jurisdiccion_nombre) %>% 
+        summarise(vac=sum(primera_dosis_cantidad)) %>% 
+        rename(nomdep=jurisdiccion_nombre) %>%
+        left_join(pobdeptos) %>%
+        dplyr::filter(substring(nomdep,1,3)!="Min") %>%
+        mutate(`Pob. vacunada (%)`=round(vac/poblacion*100,digits = 1)) %>%
+        rename(Jurisdicción=nomdep)
+    
+      datos_res <- cbind(datos_resumen() %>% left_join(vac %>% dplyr::select(Jurisdicción,`Pob. vacunada (%)`)), link=rep(as.character(actionLink('send', 'Ver detalles')),25))
       datos_res$link = str_replace(datos_res$link,"send",paste0('send','_',datos_res$Jurisdicción))
       
       
-      colnames(datos_res)[8] <- " "
+      colnames(datos_res)[9] <- " "
       
-      
+      #browser()
       formatt <- 
-        formattable(datos_res, align = c("l",rep("r", NCOL(datos_resumen()) - 1)), list(
+        formattable(datos_res, align = c("l",rep("r", NCOL(datos_resumen()))), list(
           `Jurisdicción` = formatter("span", style = ~ style(color = "grey",font.weight = "bold", width=12)),
           # area(col = 2, row=get_color_tile(datos_res,2,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
           # area(col = 2, row=get_color_tile(datos_res,2,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
@@ -603,11 +651,13 @@ grafico <- reactive({
           # area(col = 7, row=get_color_tile(datos_res,7,"mayor")) ~ color_tile("#fee0d2", "#de2d26")
           
           area(col = 2, row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),
+          #area(col = c(2:8), row=  1) ~ color_tile("#bdbdbd","#bdbdbd"),
           area(col = 3, row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),     
           area(col = 4, row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),     
           area(col = 5, row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),     
           area(col = 6, row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),     
-          area(col = 7, row= -1) ~ color_tile("#F7FBFF", "#8dcff2")     
+          area(col = 7, row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),
+          area(col = 8, row= -1) ~ color_tile("#F7FBFF", "#8dcff2")
           # area(col = 2, row = c(1,3,5,7,8,9,10,13,14,15)) ~ color_tile("red", "white"),
           # area(col = 2, row = c(2,4,6,11,12)) ~ color_tile("white","green")
           # 
@@ -643,16 +693,219 @@ grafico <- reactive({
     
     output$titulo_depto <- renderUI({
       
-      tags$p("Indicadores de la jurisdicción",tags$a(style="font-size: 14px;  color: #67c97c;","(volver a la tabla)",href= '#'))
+      tags$p("Indicadores de la jurisdicción"
+             #,tags$a(style="font-size: 14px;  color: #67c97c;","(volver a la tabla)",href= '#')
+             )
     })
     
+
+    output$titulo_vacunas <- renderUI({
+      
+      tags$p("Vacunación"
+             #,tags$a(style="font-size: 14px;  color: #67c97c;","(volver a la tabla)",href= '#')
+             )
+    })
     
+
+
+
+output$vacunas1 <- renderPlotly({
+  
+  depto=input$select_depto
+  tabla=vacunas %>% filter(jurisdiccion_nombre==depto) %>% arrange(-primera_dosis_cantidad)
+  m <- sum(vacunas[vacunas$jurisdiccion_nombre==depto,NCOL(vacunas)])
+  ggplotly(
+    ggplot(tabla, aes(
+      x = reorder(vacuna_nombre,-primera_dosis_cantidad),
+      text = paste(
+        
+        depto,
+        "\n",
+        "Aplicaciones de primera dosis: ",
+        primera_dosis_cantidad,
+        "\n",
+        "Tipo: ", 
+        vacuna_nombre
+      ),
+      fill = as.factor(primera_dosis_cantidad)
+    )) +
+      geom_bar(aes(weight = primera_dosis_cantidad)) +
+      scale_fill_hue(c = 40) +
+      theme(
+        legend.position = "none",
+        panel.background = NULL,
+        axis.text = element_text(size = 7),
+        axis.title = element_text(size = 8, face = "bold")
+      ) + ggtitle(
+        "Aplicaciones de primera dosis"
+      ) + scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 10)) +
+      xlab("") + ylab("Aplicaciones") + scale_y_continuous(
+        limits = c(0, m),
+        name = "Dosis aplicadas",
+        labels = scales::comma
+      ),
+    tooltip = 'text'
+  ) %>% config(displayModeBar = F)
+  
+  
+})
+
+output$vacunas2 <- renderPlotly({
+  depto=input$select_depto
+  tabla=vacunas %>% filter(jurisdiccion_nombre==depto) %>% arrange(-segunda_dosis_cantidad)
+  m <- sum(vacunas[vacunas$jurisdiccion_nombre==depto,NCOL(vacunas)])
+  ggplotly(
+    ggplot(tabla, aes(
+      x = reorder(vacuna_nombre,-segunda_dosis_cantidad),
+      text = paste(
+        
+        depto,
+        "\n",
+        "Dosis aplicadas: ",
+        segunda_dosis_cantidad,
+        "\n",
+        "Tipo: ", 
+        vacuna_nombre
+      ),
+      fill = as.factor(segunda_dosis_cantidad)
+    )) +
+      geom_bar(aes(weight = segunda_dosis_cantidad)) +
+      scale_fill_hue(c = 40) +
+      theme(
+        legend.position = "none",
+        panel.background = NULL,
+        axis.text = element_text(size = 7),
+        axis.title = element_text(size = 8, face = "bold")
+      ) + ggtitle(
+        "Aplicaciones de segunda dosis"
+      ) + scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 10)) +
+      xlab("") + ylab("Dosis aplicadas") + scale_y_continuous(
+        limits = c(0, m),
+        name = "Dosis aplicadas",
+        labels = scales::comma
+      ),
+    tooltip = 'text'
+  ) %>% config(displayModeBar = F)
+})
+
+
+output$vacunas3 <- renderPlotly({
+  depto=input$select_depto
+  tabla=vacunas %>% filter(jurisdiccion_nombre==depto) %>% arrange(-dosis_total)
+  m <- sum(vacunas[vacunas$jurisdiccion_nombre==depto,NCOL(vacunas)])
+  ggplotly(
+    ggplot(tabla, aes(
+      x = reorder(vacuna_nombre,-dosis_total),
+      text = paste(
+        
+        depto,
+        "\n",
+        "Dosis aplicadas (total): ",
+        dosis_total,
+        "\n",
+        "Tipo: ", 
+        vacuna_nombre
+      ),
+      fill = as.factor(dosis_total)
+    )) +
+      geom_bar(aes(weight = dosis_total)) +
+      scale_fill_hue(c = 40) +
+      theme(
+        legend.position = "none",
+        panel.background = NULL,
+        axis.text = element_text(size = 7),
+        axis.title = element_text(size = 8, face = "bold")
+      ) + ggtitle(
+        "Cantidad de dosis aplicadas (total)"
+      ) + scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 10)) +
+      xlab("") + ylab("Dosis aplicadas") + scale_y_continuous(
+        limits = c(0, m),
+        name = "Dosis aplicadas",
+        labels = scales::comma
+      ),
+    tooltip = 'text'
+  ) %>% config(displayModeBar = F)
+  
+})
+
+output$vacunas4 <- renderPlotly({
+
+  pobla <- pobdeptos$poblacion[pobdeptos$nomdep==input$select_depto]
+  
+  depto=input$select_depto
+  
+  tabla=vacunas %>% filter(jurisdiccion_nombre==depto) %>% arrange(-dosis_total)
+  m <- sum(vacunas[vacunas$jurisdiccion_nombre==depto,NCOL(vacunas)])
+  tabla=tabla %>% group_by(jurisdiccion_codigo_indec) %>% summarise(una_dosis=sum(primera_dosis_cantidad)-sum(segunda_dosis_cantidad),
+                                                                    dos_dosis=sum(segunda_dosis_cantidad))
+  
+  tabla$una_dosis <- round(tabla$una_dosis / pobla * 100, digits = 1)
+  tabla$dos_dosis <- round(tabla$dos_dosis / pobla * 100, digits = 1)
+  
+  tabla <- data.frame(Dosis=c("Sólo una dosis",
+                              "Dos dosis"),
+                      Cantidad=c(tabla$una_dosis[1],
+                                 tabla$dos_dosis[1])) %>% arrange(Cantidad)
+  tabla[3,1] <- "Sin vacunación"
+  tabla[3,2] <- 100-tabla[2,2]-tabla[1,2]
+  
+  colors <- c('rgb(252,141,89)', 'rgb(255,255,191)', 'rgb(145,191,219)')
+  
+  fig <- plot_ly(tabla, 
+                 labels = ~Dosis, 
+                 values = ~Cantidad, 
+                 type = 'pie',
+                 
+                 hoverinfo = 'text',
+                 #text = ~paste0(Dosis, ": ", Cantidad, "%"),
+                 marker = list(colors = colors, showlegend = FALSE),
+                 textinfo = ''
+                 )
+  
+  
+  fig %>%        layout(title = 'Población vacunada (%)', 
+                 xaxis = list(showgrid = FALSE, 
+                              zeroline = FALSE, 
+                              showticklabels = FALSE),
+                 yaxis = list(showgrid = FALSE, 
+                              zeroline = FALSE, 
+                              showticklabels = FALSE), 
+                 title = list(xanchor = "right")) %>% 
+                 config(displayModeBar = F)  %>% layout(autosize = F, width = 450, height = 450, margin = m)
+})
+
+output$resumen_vac <- renderFormattable({
+  
+  
+  pobla <- pobdeptos$poblacion[pobdeptos$nomdep==input$select_depto]
+  depto=input$select_depto
+  tabla=vacunas %>% filter(jurisdiccion_nombre==depto) %>% arrange(-dosis_total)
+  formattable(
+    data.frame(`Resumen`=c("Jurisdicción",
+                           "Dosis totales aplicadas",
+                           "Primeras dosis aplicadas", 
+                           "Segundas dosis aplicadas",
+                           "Porcentaje de población con una dosis",
+                           "Porcentaje de población con dos dosis",
+                           "Porcentaje de población con una o dos dosis"),
+               Cantidad=c(
+                          input$select_depto,
+                          sum(tabla$dosis_total),
+                          sum(tabla$primera_dosis_cantidad),
+                          sum(tabla$segunda_dosis_cantidad),
+                          round(sum(tabla$primera_dosis_cantidad-tabla$segunda_dosis_cantidad)/pobla*100,digits=1),
+                          round(sum(tabla$segunda_dosis_cantidad)/pobla*100,digits=1),
+                          round(sum(tabla$primera_dosis_cantidad)/pobla*100,digits=1)
+  )), align = c("l","r")
+    )
+  
+})
+
+output$seleccion <- renderText({
+  
+  print(input$select_depto)})
+
 }
-
-
-
-
-
 
 # Run the application 
 shinyApp(ui = ui, server = server)
