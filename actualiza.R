@@ -19,7 +19,7 @@ dataMsal_c <-read.csv("Covid19Casos.csv", fileEncoding = "UTF-8") #dejo una vers
 
 dataMsal_c  <- dataMsal_c %>%
     filter(residencia_provincia_id==6) %>%
-    mutate(residencia_departamento_id= case_when(residencia_departamento_id== 0 ~ 999,
+    mutate(residencia_departamento_id= case_when(residencia_departamento_id < 7 ~ 999,
                                                TRUE ~ as.numeric(residencia_departamento_id)))
 
 
