@@ -39,7 +39,7 @@ ui <- fluidPage(
     useShinyjs(),
     theme = shinytheme("cerulean"),
     tags$head(HTML('<link rel="icon", href="ISO-IECS.png", type="image/png" />')),
-    titlePanel(windowTitle = "COVID Municipios", title = ""),
+    titlePanel(windowTitle = "COVID Provincia de Buenos Aires", title = ""),
     tags$style(".small-box.bg-yellow { background-color: #fff39c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
     tags$style(".small-box.bg-green { background-color: #a5ff9c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
     tags$style(".small-box.bg-red { background-color: #ff9c9c !important; color: #000000 !important; border: 2px solid #317eac; border-radius: 25px;}"),
@@ -56,7 +56,8 @@ ui <- fluidPage(
                     column(9,
                            fluidRow(
                              column(9,
-                             tags$h2("Proyecto COVID Municipios Bonaerenses"), align="center"
+                             tags$h2("Tablero de control dinámico de COVID-19: Provincia de Buenos Aires"),
+                             align="center"
                            )),
                            fluidRow(             
                              column(9,
