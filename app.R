@@ -192,8 +192,13 @@ ui <- fluidPage(
   fluidRow(
     column(1),
     column(5,
-           plotlyOutput("vacunas3")
-           #leafletOutput("mapa1")
+           dropdownButton(
+             selectInput("select_graf","Ver población vacunada en", choices = c("Cantidad","Porcentaje")),
+             circle = TRUE, status = "information",
+             icon = icon("chart-bar"), width = "300px",
+             tooltip = tooltipOptions(title = "Cambiar gráfico")),
+             plotlyOutput("vacunas3")
+           
     )
     ,
     column(5,
@@ -221,7 +226,10 @@ ui <- fluidPage(
 
 <a href="#" class="btn btn-info btn-sm">Volver al inicio</a>'), bottom = 10, right = 8, fixed = TRUE) ),
   
-  fade(absolutePanel(HTML(paste0('<p style="text-align: justify;"><p><span style="color: #99ccff;">Jurisdicci&oacute;n seleccionada</span>: <strong>',textOutput("seleccion"),'</strong></p>')), bottom = 5, right = 150, fixed = TRUE) ),
+   fade(absolutePanel(HTML(paste0('
+                                 <div style="background-color: #f0f0f0 ; opacity:0.95 ; border-radius: 15px 15px 15px 15px; padding: 10px; ">
+                                 <p style="text-align: center;"><p><span style="color: #99ccff;">Jurisdicci&oacute;n seleccionada</span>: <strong>',textOutput("seleccion"),'</strong></p>
+                                 </div>')), bottom = 50, right = 10, fixed = TRUE) ),
   
   fade(absolutePanel(tags$a(
     img(src="CIPSlogo.png", height = 58.5, width = 100),
@@ -620,22 +628,25 @@ grafico <- reactive({
 
       vac <- vacunas %>% 
         group_by(jurisdiccion_nombre) %>% 
-        summarise(vac=sum(primera_dosis_cantidad)) %>% 
+        summarise(vac=sum(primera_dosis_cantidad),
+                  vac2=sum(segunda_dosis_cantidad)) %>% 
         rename(nomdep=jurisdiccion_nombre) %>%
         left_join(pobdeptos) %>%
         dplyr::filter(substring(nomdep,1,3)!="Min") %>%
-        mutate(`Pob. vacunada (%)`=round(vac/poblacion*100,digits = 1)) %>%
+        mutate(`Pob. vacunada con una dosis (%)`=round(vac/poblacion*100,digits = 1),
+               `Pob. vacunada con dos dosis (%)`=round(vac2/poblacion*100,digits = 1)) %>%
         rename(Jurisdicción=nomdep)
     
-      datos_res <- cbind(datos_resumen() %>% left_join(vac %>% dplyr::select(Jurisdicción,`Pob. vacunada (%)`)), link=rep(as.character(actionLink('send', 'Ver detalles')),25))
+      datos_res <- cbind(datos_resumen() %>% left_join(vac %>% dplyr::select(Jurisdicción,`Pob. vacunada con una dosis (%)`,`Pob. vacunada con dos dosis (%)`)), link=rep(as.character(actionLink('send', 'Ver detalles')),25))
       datos_res$link = str_replace(datos_res$link,"send",paste0('send','_',datos_res$Jurisdicción))
       
       
-      colnames(datos_res)[9] <- " "
-      
+      colnames(datos_res)[10] <- '                  '
+      set_font_size <- formatter("span", style = "font-size:12px")
+      names(datos_res) <- set_font_size(names(datos_res))
       #browser()
       formatt <- 
-        formattable(datos_res, align = c("l",rep("r", NCOL(datos_resumen()))), list(
+        formattable(datos_res, align = c("l",rep("r", NCOL(datos_resumen())+1)), list(
           `Jurisdicción` = formatter("span", style = ~ style(color = "grey",font.weight = "bold", width=12)),
           # area(col = 2, row=get_color_tile(datos_res,2,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
           # area(col = 2, row=get_color_tile(datos_res,2,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
@@ -657,7 +668,8 @@ grafico <- reactive({
           area(col = 5, row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),     
           area(col = 6, row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),     
           area(col = 7, row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),
-          area(col = 8, row= -1) ~ color_tile("#F7FBFF", "#8dcff2")
+          area(col = 8, row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),
+          area(col = 9, row= -1) ~ color_tile("#F7FBFF", "#8dcff2")
           # area(col = 2, row = c(1,3,5,7,8,9,10,13,14,15)) ~ color_tile("red", "white"),
           # area(col = 2, row = c(2,4,6,11,12)) ~ color_tile("white","green")
           # 
@@ -790,42 +802,38 @@ output$vacunas2 <- renderPlotly({
 
 
 output$vacunas3 <- renderPlotly({
-  depto=input$select_depto
-  tabla=vacunas %>% filter(jurisdiccion_nombre==depto) %>% arrange(-dosis_total)
-  m <- sum(vacunas[vacunas$jurisdiccion_nombre==depto,NCOL(vacunas)])
-  ggplotly(
-    ggplot(tabla, aes(
-      x = reorder(vacuna_nombre,-dosis_total),
-      text = paste(
-        
-        depto,
-        "\n",
-        "Dosis aplicadas (total): ",
-        dosis_total,
-        "\n",
-        "Tipo: ", 
-        vacuna_nombre
-      ),
-      fill = as.factor(dosis_total)
-    )) +
-      geom_bar(aes(weight = dosis_total)) +
-      scale_fill_hue(c = 40) +
-      theme(
-        legend.position = "none",
-        panel.background = NULL,
-        axis.text = element_text(size = 7),
-        axis.title = element_text(size = 8, face = "bold")
-      ) + ggtitle(
-        "Cantidad de dosis aplicadas (total)"
-      ) + scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 10)) +
-      xlab("") + ylab("Dosis aplicadas") + scale_y_continuous(
-        limits = c(0, m),
-        name = "Dosis aplicadas",
-        labels = scales::comma
-      ),
-    tooltip = 'text'
-  ) %>% config(displayModeBar = F)
   
+  pobla <- pobdeptos %>% select(nomdep,poblacion) %>% rename(jurisdiccion_nombre=nomdep)
+  c <- 'Cantidad de población vacunada (esquema completo)'
+  p <- 'Porcentaje de población vacunada (esquema completo)'
+  if (input$select_graf=="Cantidad") 
+    {titulo <<- c} else
+    {titulo <<- p}
+  
+  depto=input$select_depto
+  tabla <- 
+  vacunas %>% group_by(jurisdiccion_codigo_indec,jurisdiccion_nombre) %>%
+              summarise(var=sum(segunda_dosis_cantidad)) %>%
+              dplyr::filter(substring(jurisdiccion_nombre,1,3)!="Min" &
+                            substring(jurisdiccion_nombre,1,3)!="Tot") %>%
+              left_join(pobla) %>%
+              mutate(poblacion_vacunada=var,
+                     por_poblacion_vacunada=round(var/poblacion*100,digits=2))
+  
+  if (input$select_graf=="Cantidad") {varx <- tabla$poblacion_vacunada} else
+  {varx <- tabla$por_poblacion_vacunada} 
+  
+  
+  fig <- plot_ly(x = varx, 
+                 y = ~reorder(tabla$jurisdiccion_nombre,varx), 
+                 type = 'bar', 
+                 orientation = 'h',
+                 color = ~tabla$jurisdiccion_nombre,
+                 colors = "Dark2")
+  fig %>% layout(title = titulo,
+                 xaxis = list(title="Población vacunada",titlefont = list(size = 10), tickfont = list(size = 8)),
+                 yaxis = list(title="",titlefont = list(size = 10), tickfont = list(size = 10)),
+                 showlegend = FALSE) %>% config(displayModeBar = F)
 })
 
 output$vacunas4 <- renderPlotly({
