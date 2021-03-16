@@ -579,7 +579,7 @@ get_color_tile(datos_res,2,"mayor")
   
   formatt <- 
   formattable(datos_res, align = c("l",rep("r", NCOL(datos_resumen()) - 1)), list(
-    `Departamento` = formatter("span", style = ~ style(color = "grey",font.weight = "bold", width=12)),
+    `Departamento` = formatter("span", style = ~ formattable::style(color = "grey",font.weight = "bold", width=12)),
     # area(col = 2, row=get_color_tile(datos_res,2,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
     # area(col = 2, row=get_color_tile(datos_res,2,"mayor")) ~ color_tile("#fee0d2", "#de2d26"),
     # area(col = 3, row=get_color_tile(datos_res,3,"menor")) ~ color_tile("#31a354", "#e5f5e0"),
@@ -604,7 +604,7 @@ get_color_tile(datos_res,2,"mayor")
     )) 
   
   
-      code <- as.character(formatt)
+    code <- as.character(formatt)
     
     code <- HTML(str_replace_all(code,'<th style=\"text-align:right;\">','<th style=\"text-align:center;\">'))
     code
