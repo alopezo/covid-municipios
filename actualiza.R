@@ -9,8 +9,8 @@ library(stats)
 #setwd("D:/municipios")
 
 #### DESCARGA DATOS  ####
-#urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos.csv'
-#download.file(urlMsal, "Covid19Casos.csv")
+urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos.csv'
+download.file(urlMsal, "Covid19Casos.csv")
 
 #### IMPORTA DATOS ####
 dataMsal_c <-read.csv("Covid19Casos.csv", fileEncoding = "UTF-8") #dejo una version completa para testeos y positividad
