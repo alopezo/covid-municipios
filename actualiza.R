@@ -9,8 +9,8 @@ library(stats)
 #setwd("D:/municipios")
 
 #### DESCARGA DATOS  ####
-urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos.csv'
-download.file(urlMsal, "Covid19Casos.csv")
+#urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos.csv'
+#download.file(urlMsal, "Covid19Casos.csv")
 
 #### IMPORTA DATOS ####
 dataMsal_c <-read.csv("Covid19Casos.csv", fileEncoding = "UTF-8") #dejo una version completa para testeos y positividad
@@ -20,7 +20,9 @@ dataMsal_c <-read.csv("Covid19Casos.csv", fileEncoding = "UTF-8") #dejo una vers
 dataMsal_c  <- dataMsal_c %>%
     filter(residencia_provincia_id==6) %>%
     mutate(residencia_departamento_id= case_when(residencia_departamento_id < 7 ~ 999,
-                                               TRUE ~ as.numeric(residencia_departamento_id)))
+                                               TRUE ~ as.numeric(residencia_departamento_id)),
+           residencia_departamento_nombre= case_when(residencia_departamento_id == 999 ~ "SIN ESPECIFICAR",
+                                                     TRUE ~ as.character(residencia_departamento_nombre)))
 
 
 #Genero el data de confirmados
@@ -54,13 +56,13 @@ dataMsal$fecha_diagnostico[dataMsal$fecha_diagnostico==""] <- dataMsal$fecha[dat
 dataMsal$fecha <- NULL
 
 
-
-
 ##### NOMBRES DE PARTIDOS PARA APP #####
-denom_depto <- rbind(c("Total Buenos Aires",0),dataMsal %>% distinct(residencia_departamento_id, residencia_departamento_nombre) %>%
-                            arrange(residencia_departamento_id, residencia_departamento_nombre))
+denom_depto <- rbind(c("Total Buenos Aires",0),cbind(unique(dataMsal$residencia_departamento_nombre),unique(dataMsal$residencia_departamento_id)))
                  
 
+denom_depto <- as.data.frame(denom_depto[order(as.numeric(denom_depto[,2])),])
+
+colnames(denom_depto) <- c("residencia_departamento_nombre","residencia_departamento_id")
                             
 #### CREA DF AGREGADO ####
 
