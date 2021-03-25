@@ -10,7 +10,8 @@ library(stats)
 
 #### DESCARGA DATOS  ####
 urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos.csv'
-download.file(urlMsal, "Covid19Casos.csv")
+#download.file(urlMsal, "Covid19Casos.csv")
+fileSize <- file.info("Covid19Casos.csv")[1,1]
 
 #### IMPORTA DATOS ####
 dataMsal_c <-read.csv("Covid19Casos.csv", fileEncoding = "UTF-8") #dejo una version completa para testeos y positividad
@@ -47,7 +48,8 @@ for (i in 1:nrow(dataMsal))
   if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]=="" & dataMsal$fecha_apertura[i]=="") {dataMsal$fecha[i] <- ""} else
   if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]=="" & dataMsal$fecha_apertura[i]!="") {dataMsal$fecha[i] <- dataMsal$fecha_apertura[i]} else
   if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]!="") {dataMsal$fecha[i] <- dataMsal$fecha_inicio_sintomas[i]}
-  print(paste0("IMPUTANDO FECHA - COMPLETO: ", round(i/nrow(dataMsal)*100,2)))
+  if (i==1) {print(paste0("IMPUTANDO FECHA..."))}
+  if (i==nrow(dataMsal)) {print(paste0("FINALIZADO"))}
   } 
 
 dataMsal$fecha_diagnostico[dataMsal$fecha_diagnostico==""] <- dataMsal$fecha[dataMsal$fecha_diagnostico==""]
