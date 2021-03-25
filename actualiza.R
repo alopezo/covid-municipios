@@ -10,7 +10,8 @@ library(stats)
 
 #### DESCARGA DATOS  ####
 urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos.csv'
-download.file(urlMsal, "Covid19Casos.csv")
+#download.file(urlMsal, "Covid19Casos.csv")
+fileSize <- file.info("Covid19Casos.csv")[1,1]
 
 #### IMPORTA DATOS ####
 dataMsal_c <- read.csv("Covid19Casos.csv", fileEncoding = "UTF-8") #dejo una version completa para testeos y positividad
