@@ -10,7 +10,7 @@ library(stats)
 
 #### DESCARGA DATOS  ####
 urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos.csv'
-download.file(urlMsal, "Covid19Casos.csv")
+#download.file(urlMsal, "Covid19Casos.csv")
 fileSize <- file.info("Covid19Casos.csv")[1,1]
 
 #### IMPORTA DATOS ####
