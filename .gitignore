@@ -8,5 +8,8 @@ rsconnect
 **/*.icloud
 **/casos_covid19.zip
 **/Covid19Casos.csv
+**/Covid19Vacunas.csv
+**/Covid19Vacunas.zip
+**/datos_nomivac_covid.csv
 actualiza.Rout
 .RData

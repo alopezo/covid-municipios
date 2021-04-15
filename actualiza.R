@@ -13,6 +13,12 @@ urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos
 #download.file(urlMsal, "Covid19Casos.csv")
 fileSize <- file.info("Covid19Casos.csv")[1,1]
 
+urlVacunas <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/datos_nomivac_covid19.zip'
+download.file(urlVacunas, "Covid19Vacunas.zip")
+unzip("Covid19Vacunas.zip")
+fileSize <- file.info("datos_nomivac_covid19.csv")[1,1]
+vacunasFecha <-   read.csv("datos_nomivac_covid19.csv", sep=",", encoding="UTF-8")
+
 #### IMPORTA DATOS ####
 dataMsal_c <-read.csv("Covid19Casos.csv", fileEncoding = "UTF-8") #dejo una version completa para testeos y positividad
 dataMsal<-dataMsal_c %>% filter(clasificacion_resumen=="Confirmado" & residencia_provincia_id==6) %>%
@@ -205,7 +211,22 @@ dataMsal <- dataMsal %>%
   select(-testeos,-positividad) %>%
   as.data.frame()
 
-     
+
+##### VACUNAS POR FECHA #####
+
+vacunasFecha <- vacunasFecha %>% group_by(grupo_etario,
+                                          jurisdiccion_residencia_id,
+                                          depto_residencia,
+                                          depto_residencia_id,
+                                          jurisdiccion_aplicacion,
+                                          jurisdiccion_aplicacion_id,
+                                          depto_aplicacion,
+                                          depto_aplicacion_id,
+                                          fecha_aplicacion,
+                                          vacuna,
+                                          condicion_aplicacion,
+                                          orden_dosis) %>%
+  dplyr::summarise(vacunas=n())
 
 
 ##### GRABA RDATA PARA APP #####
