@@ -4,20 +4,26 @@ library(zoo)
 library(TTR)
 library(EpiEstim)
 library(stats)
+library(tidyr)
+library(lubridate)
 
 ##### FIJAR DIRECTORIO DE TRABAJO ####
 #setwd("D:/municipios")
 
 #### DESCARGA DATOS  ####
-urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos.csv'
-#download.file(urlMsal, "Covid19Casos.csv")
+#urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos.zip'
+#download.file(urlMsal, "Covid19Casos.zip")
+#unzip("Covid19Casos.zip")
 fileSize <- file.info("Covid19Casos.csv")[1,1]
 
-urlVacunas <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/datos_nomivac_covid19.zip'
-download.file(urlVacunas, "Covid19Vacunas.zip")
-unzip("Covid19Vacunas.zip")
+#urlVacunas <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/datos_nomivac_covid19.zip'
+#download.file(urlVacunas, "Covid19Vacunas.zip")
+#unzip("Covid19Vacunas.zip")
 fileSize <- file.info("datos_nomivac_covid19.csv")[1,1]
 vacunasFecha <-   read.csv("datos_nomivac_covid19.csv", sep=",", encoding="UTF-8")
+if (file.exists("datos_nomivac_covid19.csv")) {
+    file.remove("datos_nomivac_covid19.csv")
+}
 
 #### IMPORTA DATOS ####
 dataMsal_c <-read.csv("Covid19Casos.csv", fileEncoding = "UTF-8") #dejo una version completa para testeos y positividad
@@ -214,7 +220,9 @@ dataMsal <- dataMsal %>%
 
 ##### VACUNAS POR FECHA #####
 
-vacunasFecha <- vacunasFecha %>% group_by(grupo_etario,
+vacunasFecha <- vacunasFecha %>%  filter(jurisdiccion_residencia_id==6 &
+                                         depto_residencia_id %in% c(63,294,476,505,547,616,651,700,707,756,784,791,826,301,277)) %>%
+                                  group_by(grupo_etario,
                                           jurisdiccion_residencia_id,
                                           depto_residencia,
                                           depto_residencia_id,
@@ -226,7 +234,11 @@ vacunasFecha <- vacunasFecha %>% group_by(grupo_etario,
                                           vacuna,
                                           condicion_aplicacion,
                                           orden_dosis) %>%
-  dplyr::summarise(vacunas=n())
+                                  dplyr::summarise(vacunas=n()) %>%
+                                  mutate(SE=paste0(epiyear(fecha_aplicacion),'_',str_pad(epiweek(fecha_aplicacion),2,"left", "0")),
+                                         SE_NUM=as.numeric(epiyear(fecha_aplicacion))*100+as.numeric(epiweek(fecha_aplicacion))
+                                         
+                                         )
 
 
 ##### GRABA RDATA PARA APP #####
