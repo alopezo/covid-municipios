@@ -23,7 +23,7 @@ fileSize <- file.info("datos_nomivac_covid19.csv")[1,1]
 vacunasFecha <-   read.csv("datos_nomivac_covid19.csv", sep=",", encoding="UTF-8")
 if (file.exists("datos_nomivac_covid19.csv")) {
     file.remove("datos_nomivac_covid19.csv")
-    file.remove("datos_nomivac_covid19.zip")
+    file.remove("Covid19Vacunas.zip")
 }
 
 #### IMPORTA DATOS ####
