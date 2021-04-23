@@ -738,7 +738,7 @@ server <- function(input, output, session) {
                            if (v > 1) return v-1 + ' de 2021'}"
 
 
-      browser()
+     
       vac <- vac[,c(1,2)]
       titulo <- paste0("Aplicaciones por semana epidemiológica ", '- ', input$select_depto)
       dygraph(vac, main = paste0(titulo)) %>% 

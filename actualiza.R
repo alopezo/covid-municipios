@@ -16,13 +16,14 @@ library(lubridate)
 #unzip("Covid19Casos.zip")
 fileSize <- file.info("Covid19Casos.csv")[1,1]
 
-#urlVacunas <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/datos_nomivac_covid19.zip'
-#download.file(urlVacunas, "Covid19Vacunas.zip")
-#unzip("Covid19Vacunas.zip")
+urlVacunas <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/datos_nomivac_covid19.zip'
+download.file(urlVacunas, "Covid19Vacunas.zip")
+unzip("Covid19Vacunas.zip")
 fileSize <- file.info("datos_nomivac_covid19.csv")[1,1]
 vacunasFecha <-   read.csv("datos_nomivac_covid19.csv", sep=",", encoding="UTF-8")
 if (file.exists("datos_nomivac_covid19.csv")) {
     file.remove("datos_nomivac_covid19.csv")
+    file.remove("datos_nomivac_covid19.zip")
 }
 
 #### IMPORTA DATOS ####
