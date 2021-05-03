@@ -247,11 +247,16 @@ dataMsal <- dataMsal %>%
   as.data.frame()
 
 ##### Vacunas #####
-vacunas <- read.csv2('https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19VacunasAgrupadas.csv', 
+download.file("https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19VacunasAgrupadas.csv.zip", destfile = "Covid19VacunasAgrupadas.zip")
+unzip("Covid19VacunasAgrupadas.zip")
+
+
+vacunas <- read.csv2('Covid19VacunasAgrupadas.csv', 
                      header=T, 
                      encoding = 'UTF-8', 
                      sep=',')
-
+file.remove("Covid19VacunasAgrupadas.zip")
+file.remove("Covid19VacunasAgrupadas.csv")
 vacunas$dosis_total <- vacunas$primera_dosis_cantidad+vacunas$segunda_dosis_cantidad
 
 vacunas <- rbind(vacunas,
