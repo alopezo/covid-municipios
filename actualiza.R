@@ -51,6 +51,7 @@ dataMsal$fecha <- coalesce(dataMsal$fecha_diagnostico,dataMsal$fecha_inicio_sint
 #   }
 
 dataMsal$fecha_diagnostico <- dataMsal$fecha 
+dataMsal$fecha <- NULL
 
 ##### NOMBRES DE PARTIDOS PARA APP #####
 denom_depto <- dataMsal %>% distinct(residencia_departamento_id, residencia_departamento_nombre) %>%
