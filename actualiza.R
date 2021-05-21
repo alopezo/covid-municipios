@@ -45,18 +45,21 @@ totales <-
 
 
 ##### COMPLETA FECHA DIAGNOSTICO CON OTRAS FECHAS #####
-dataMsal$fecha <- ""
-for (i in 1:nrow(dataMsal))
-  {
-  if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]=="" & dataMsal$fecha_apertura[i]=="") {dataMsal$fecha[i] <- ""} else
-  if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]=="" & dataMsal$fecha_apertura[i]!="") {dataMsal$fecha[i] <- dataMsal$fecha_apertura[i]} else
-  if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]!="") {dataMsal$fecha[i] <- dataMsal$fecha_inicio_sintomas[i]}
-  if (i==1) {print(paste0("IMPUTANDO FECHA..."))}
-  if (i==nrow(dataMsal)) {print(paste0("FINALIZADO"))}
-  } 
 
-dataMsal$fecha_diagnostico[dataMsal$fecha_diagnostico==""] <- dataMsal$fecha[dataMsal$fecha_diagnostico==""]
-dataMsal$fecha <- NULL
+dataMsal$fecha_diagnostico[dataMsal$fecha_diagnostico==""] <- NA
+dataMsal$fecha_apertura[dataMsal$fecha_apertura==""] <- NA
+dataMsal$fecha_inicio_sintomas[dataMsal$fecha_inicio_sintomas==""] <- NA
+dataMsal$fecha <- coalesce(dataMsal$fecha_diagnostico,dataMsal$fecha_inicio_sintomas,dataMsal$fecha_apertura)
+
+# for (i in 1:nrow(dataMsal))
+#   {
+#   if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]=="" & dataMsal$fecha_apertura[i]=="") {dataMsal$fecha[i] <- ""} else
+#   if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]=="" & dataMsal$fecha_apertura[i]!="") {dataMsal$fecha[i] <- dataMsal$fecha_apertura[i]} else
+#   if (dataMsal$fecha_diagnostico[i]=="" & dataMsal$fecha_inicio_sintomas[i]!="") {dataMsal$fecha[i] <- dataMsal$fecha_inicio_sintomas[i]}
+#   print(paste0("IMPUTANDO FECHA - COMPLETO: ", round(i/nrow(dataMsal)*100,2)))
+#   }
+
+dataMsal$fecha_diagnostico <- dataMsal$fecha 
 
 
 ##### NOMBRES DE PARTIDOS PARA APP #####
