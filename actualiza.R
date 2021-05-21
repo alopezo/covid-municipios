@@ -60,7 +60,7 @@ dataMsal$fecha <- coalesce(dataMsal$fecha_diagnostico,dataMsal$fecha_inicio_sint
 #   }
 
 dataMsal$fecha_diagnostico <- dataMsal$fecha 
-
+dataMsal$fecha <- NULL
 
 ##### NOMBRES DE PARTIDOS PARA APP #####
 denom_depto <- rbind(c("Total Buenos Aires",0),cbind(unique(dataMsal$residencia_departamento_nombre),unique(dataMsal$residencia_departamento_id)))
