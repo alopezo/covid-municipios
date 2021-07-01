@@ -4,13 +4,14 @@ library(zoo)
 library(TTR)
 library(EpiEstim)
 library(stats)
+library(lubridate)
 
 ##### FIJAR DIRECTORIO DE TRABAJO ####
 #setwd("D:/municipios")
 
 #### DESCARGA DATOS  ####
-urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos.csv'
-#download.file(urlMsal, "Covid19Casos.csv")
+urlMsal <- 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/Covid19Casos.zip'
+#download.file(urlMsal, "Covid19Casos.zip")
 fileSize <- file.info("Covid19Casos.csv")[1,1]
 
 #### IMPORTA DATOS ####
@@ -27,12 +28,12 @@ dataMsal$residencia_departamento_nombre <- dataMsal$residencia_provincia_nombre
 ##### TOTALES CRUDOS #####
 totales <- 
   dataMsal_c %>% filter(clasificacion_resumen=="Confirmado") %>% 
-    group_by(residencia_departamento_nombre) %>%
-    dplyr::summarise(confirmados=sum(clasificacion_resumen=="Confirmado"),
-                     fallecidos=sum(fallecido=="SI")) %>% 
-    union_all(data.frame(residencia_departamento_nombre="Total país",
-                         confirmados=nrow(dataMsal_c[dataMsal_c$clasificacion_resumen=="Confirmado",]),
-                         fallecidos=nrow(dataMsal_c[dataMsal_c$fallecido=="SI" & dataMsal_c$clasificacion_resumen=="Confirmado",])))
+  group_by(residencia_departamento_nombre) %>%
+  dplyr::summarise(confirmados=sum(clasificacion_resumen=="Confirmado"),
+                   fallecidos=sum(fallecido=="SI")) %>% 
+  union_all(data.frame(residencia_departamento_nombre="Total país",
+                       confirmados=nrow(dataMsal_c[dataMsal_c$clasificacion_resumen=="Confirmado",]),
+                       fallecidos=nrow(dataMsal_c[dataMsal_c$fallecido=="SI" & dataMsal_c$clasificacion_resumen=="Confirmado",])))
 
 
 ##### COMPLETA FECHA DIAGNOSTICO CON OTRAS FECHAS #####
@@ -55,29 +56,29 @@ dataMsal$fecha <- NULL
 
 ##### NOMBRES DE PARTIDOS PARA APP #####
 denom_depto <- dataMsal %>% distinct(residencia_departamento_id, residencia_departamento_nombre) %>%
-                            arrange(residencia_departamento_id, residencia_departamento_nombre)
+  arrange(residencia_departamento_id, residencia_departamento_nombre)
 denom_depto <- union_all(denom_depto,data.frame(residencia_departamento_id=0,residencia_departamento_nombre="Total país")) %>% arrange(residencia_departamento_id)
 
 #### CREA DF AGREGADO ####
 
 # df de casos
 casos <- dataMsal %>% 
-            group_by(
-                fecha_diagnostico,
-                residencia_departamento_id) %>%
-            tally() %>% filter(fecha_diagnostico!="" & fecha_diagnostico>="2020-03-01" & residencia_departamento_id!=0)
+  group_by(
+    fecha_diagnostico,
+    residencia_departamento_id) %>%
+  tally() %>% filter(fecha_diagnostico!="" & fecha_diagnostico>="2020-03-01" & residencia_departamento_id!=0)
 
 # df de muertes
 muertes <- dataMsal %>% 
-              group_by(
-                  fecha_fallecimiento,
-                  residencia_departamento_id) %>%
-                  tally() %>% filter(fecha_fallecimiento!="" & fecha_fallecimiento>="2020-03-01" & residencia_departamento_id!=0)
+  group_by(
+    fecha_fallecimiento,
+    residencia_departamento_id) %>%
+  tally() %>% filter(fecha_fallecimiento!="" & fecha_fallecimiento>="2020-03-01" & residencia_departamento_id!=0)
 
 casos_ARG <- dataMsal %>% 
-      group_by(
-        fecha_diagnostico) %>%
-        tally() %>% filter(fecha_diagnostico!="" & fecha_diagnostico>="2020-03-01") %>% mutate(residencia_departamento_id=0) %>% select(fecha_diagnostico,residencia_departamento_id,n)
+  group_by(
+    fecha_diagnostico) %>%
+  tally() %>% filter(fecha_diagnostico!="" & fecha_diagnostico>="2020-03-01") %>% mutate(residencia_departamento_id=0) %>% select(fecha_diagnostico,residencia_departamento_id,n)
 
 muertes_ARG <- dataMsal %>% 
   group_by(
@@ -228,7 +229,7 @@ testeosyposit <- dataMsal_c %>%
   mutate(fecha= coalesce(fecha_diagnostico,fecha_inicio_sintomas,fecha_apertura))%>%
   group_by(fecha,clasificacion,residencia_departamento_id)%>%
   summarise(n= n()) %>%
-ungroup()%>%
+  ungroup()%>%
   group_by(residencia_departamento_id,fecha)%>%
   summarise(testeos= sum(n[grepl("criterio clinico-epidemiol?gico", clasificacion)== "FALSE"]),
             conf_lab = sum(n[grepl("confirmado por laboratorio", clasificacion)== "TRUE"]),
@@ -238,15 +239,17 @@ ungroup()%>%
 
 
 dataMsal <- dataMsal %>%
-       left_join(testeosyposit, by= c("residencia_departamento_id","fecha"))
+  left_join(testeosyposit, by= c("residencia_departamento_id","fecha"))
 rm(dataMsal_c)
 #Genero el promedio de los ?ltimos 7 d?as en testeos y positividad
 
 dataMsal <- dataMsal %>% 
-       mutate(testeos= case_when(is.na(testeos)== TRUE ~ 0, TRUE ~ as.numeric(testeos)),
-              positividad = case_when(is.na(positividad)== TRUE ~ 0, TRUE ~ as.numeric(positividad)))%>%
-       mutate(testeos_7= round(runMean(testeos,7),2),
-              positividad_7= round(runMean(positividad,7),2)) %>%
+  mutate(testeos= case_when(is.na(testeos)== TRUE ~ 0, TRUE ~ as.numeric(testeos)),
+         positividad = case_when(is.na(positividad)== TRUE ~ 0, TRUE ~ as.numeric(positividad)))%>%
+  mutate(testeos_7= round(runMean(testeos,7),2),
+         positividad_7= round(runMean(positividad,7),2),
+         incid_7_millon = promedio_casos_semana/poblacion_depto*1000000,
+         mort_7_millon = promedio_muertes_semana/poblacion_depto*1000000) %>%
   select(-testeos,-positividad) %>%
   as.data.frame()
 
@@ -264,20 +267,22 @@ file.remove("Covid19VacunasAgrupadas.csv")
 vacunas$dosis_total <- vacunas$primera_dosis_cantidad+vacunas$segunda_dosis_cantidad
 
 vacunas <- rbind(vacunas,
-vacunas %>% group_by(vacuna_nombre) %>%
-            summarise(primera_dosis_cantidad=sum(primera_dosis_cantidad),
-                      segunda_dosis_cantidad=sum(segunda_dosis_cantidad),
-                      dosis_total=sum(dosis_total)) %>%
-            mutate(jurisdiccion_codigo_indec=0,
-                   jurisdiccion_nombre="Total país") %>%
-            dplyr::select(jurisdiccion_codigo_indec,jurisdiccion_nombre,vacuna_nombre,primera_dosis_cantidad,segunda_dosis_cantidad,dosis_total)
+                 vacunas %>% group_by(vacuna_nombre) %>%
+                   summarise(primera_dosis_cantidad=sum(primera_dosis_cantidad),
+                             segunda_dosis_cantidad=sum(segunda_dosis_cantidad),
+                             dosis_total=sum(dosis_total)) %>%
+                   mutate(jurisdiccion_codigo_indec=0,
+                          jurisdiccion_nombre="Total país") %>%
+                   dplyr::select(jurisdiccion_codigo_indec,jurisdiccion_nombre,vacuna_nombre,primera_dosis_cantidad,segunda_dosis_cantidad,dosis_total)
 )
+
+semanas_epi <- data.frame(fecha = seq(min(dataMsal$fecha), Sys.Date(), by=1),
+                          epiweek = paste0(epiyear(seq(min(dataMsal$fecha), Sys.Date(), by=1)),
+                                           str_pad(epiweek(seq(min(dataMsal$fecha), Sys.Date(), by=1)),2,"left","0"))) %>%
+  group_by(epiweek) %>%
+  summarise(inicio=min(fecha),
+            fin=max(fecha))
+
+
 ##### GRABA RDATA PARA APP #####
 save.image(file="Data/municipios.RData") 
-
-
-
-
-
-
-
