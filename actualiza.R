@@ -268,12 +268,23 @@ vacunas$dosis_total <- vacunas$primera_dosis_cantidad+vacunas$segunda_dosis_cant
 
 vacunas <- rbind(vacunas,
                  vacunas %>% group_by(vacuna_nombre) %>%
-                   summarise(primera_dosis_cantidad=sum(primera_dosis_cantidad),
+                   summarise(dosis_unica_cantidad=sum(dosis_unica_cantidad),
+                             primera_dosis_cantidad=sum(primera_dosis_cantidad),
                              segunda_dosis_cantidad=sum(segunda_dosis_cantidad),
+                             dosis_adicional_cantidad=sum(dosis_adicional_cantidad),
+                             dosis_refuerzo_cantidad=sum(dosis_refuerzo_cantidad),
                              dosis_total=sum(dosis_total)) %>%
                    mutate(jurisdiccion_codigo_indec=0,
                           jurisdiccion_nombre="Total país") %>%
-                   dplyr::select(jurisdiccion_codigo_indec,jurisdiccion_nombre,vacuna_nombre,primera_dosis_cantidad,segunda_dosis_cantidad,dosis_total)
+                   dplyr::select(jurisdiccion_codigo_indec,
+                                 jurisdiccion_nombre,
+                                 vacuna_nombre,
+                                 dosis_unica_cantidad,
+                                 primera_dosis_cantidad,
+                                 segunda_dosis_cantidad,
+                                 dosis_adicional_cantidad,
+                                 dosis_refuerzo_cantidad,
+                                 dosis_total)
 )
 
 semanas_epi <- data.frame(fecha = seq(min(dataMsal$fecha), Sys.Date(), by=1),

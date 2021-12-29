@@ -19,6 +19,7 @@ library(aos)
 library(shinyjqui)
 library(kableExtra)
 library(shinyBS)
+library(tmaptools)
 
 load("Data/municipios.RData")
 load("Mapas/Mapas.Rdata")
@@ -834,15 +835,14 @@ server <- function(input, output, session) {
   
   
   output$vacunas3 <- renderPlotly({
-    
     pobla <- pobdeptos %>% select(nomdep,poblacion) %>% rename(jurisdiccion_nombre=nomdep)
-    c <- 'Cantidad de población vacunada (esquema completo)'
-    p <- 'Porcentaje de población vacunada (esquema completo)'
+    c <- 'Cantidad de población vacunada (dos dosis)'
+    p <- 'Porcentaje de población vacunada (dos dosis)'
     if (input$select_graf=="Cantidad") 
     {titulo <<- c} else
     {titulo <<- p}
     
-    depto=input$select_depto
+    depto=input$select_depto 
     tabla <- 
       vacunas %>% group_by(jurisdiccion_codigo_indec,jurisdiccion_nombre) %>%
       summarise(var=sum(segunda_dosis_cantidad)) %>%
@@ -869,7 +869,6 @@ server <- function(input, output, session) {
   })
   
   output$vacunas4 <- renderPlotly({
-    
     pobla <- pobdeptos$poblacion[pobdeptos$nomdep==input$select_depto]
     
     depto=input$select_depto
@@ -877,19 +876,36 @@ server <- function(input, output, session) {
     tabla=vacunas %>% filter(jurisdiccion_nombre==depto) %>% arrange(-dosis_total)
     m <- sum(vacunas[vacunas$jurisdiccion_nombre==depto,NCOL(vacunas)])
     tabla=tabla %>% group_by(jurisdiccion_codigo_indec) %>% summarise(una_dosis=sum(primera_dosis_cantidad)-sum(segunda_dosis_cantidad),
-                                                                      dos_dosis=sum(segunda_dosis_cantidad))
+                                                                      dos_dosis=sum(segunda_dosis_cantidad)-sum(dosis_adicional_cantidad)-sum(dosis_refuerzo_cantidad),
+                                                                      unica_dosis=sum(dosis_unica_cantidad),
+                                                                      refuerzo_dosis=sum(dosis_refuerzo_cantidad),
+                                                                      adicional_dosis=sum(dosis_adicional_cantidad)
+                                                                      
+                                                                      )
     
     tabla$una_dosis <- round(tabla$una_dosis / pobla * 100, digits = 1)
     tabla$dos_dosis <- round(tabla$dos_dosis / pobla * 100, digits = 1)
+    tabla$unica_dosis <- round(tabla$unica_dosis / pobla * 100, digits = 1)
+    tabla$refuerzo_dosis <- round(tabla$refuerzo_dosis / pobla * 100, digits = 1)
+    tabla$adicional_dosis <- round(tabla$adicional_dosis / pobla * 100, digits = 1)
     
     tabla <- data.frame(Dosis=c("Sólo una dosis",
-                                "Dos dosis"),
+                                "Sólo Dos dosis",
+                                "Dosis única",
+                                "Dos dosis más refuerzo",
+                                "Dos dosis más adicional"),
                         Cantidad=c(tabla$una_dosis[1],
-                                   tabla$dos_dosis[1])) %>% arrange(Cantidad)
-    tabla[3,1] <- "Sin vacunación"
-    tabla[3,2] <- 100-tabla[2,2]-tabla[1,2]
+                                   tabla$dos_dosis[1],
+                                   tabla$unica_dosis[1],
+                                   tabla$refuerzo_dosis[1],
+                                   tabla$adicional_dosis[1])
+                        
+                        
+                        ) %>% arrange(Cantidad)
+    tabla[6,1] <- "Sin vacunación"
+    tabla[6,2] <- 100-tabla[1,2]-tabla[2,2]-tabla[3,2]-tabla[4,2]-tabla[5,2]
     
-    colors <- c('rgb(252,141,89)', 'rgb(255,255,191)', 'rgb(145,191,219)')
+    colors <- tmaptools::get_brewer_pal("Set3",6)
     
     fig <- plot_ly(tabla, 
                    labels = ~Dosis, 
@@ -914,33 +930,33 @@ server <- function(input, output, session) {
       config(displayModeBar = F)  %>% layout(autosize = F, width = 450, height = 450, margin = m)
   })
   
-  output$resumen_vac <- renderFormattable({
-    
-    
-    pobla <- pobdeptos$poblacion[pobdeptos$nomdep==input$select_depto]
-    depto=input$select_depto
-    tabla=vacunas %>% filter(jurisdiccion_nombre==depto) %>% arrange(-dosis_total)
-    formattable(
-      data.frame(`Resumen`=c("Jurisdicción",
-                             "Dosis totales aplicadas",
-                             "Primeras dosis aplicadas", 
-                             "Segundas dosis aplicadas",
-                             "Porcentaje de población con una dosis",
-                             "Porcentaje de población con dos dosis",
-                             "Porcentaje de población con una o dos dosis"),
-                 Cantidad=c(
-                   input$select_depto,
-                   sum(tabla$dosis_total),
-                   sum(tabla$primera_dosis_cantidad),
-                   sum(tabla$segunda_dosis_cantidad),
-                   round(sum(tabla$primera_dosis_cantidad-tabla$segunda_dosis_cantidad)/pobla*100,digits=1),
-                   round(sum(tabla$segunda_dosis_cantidad)/pobla*100,digits=1),
-                   round(sum(tabla$primera_dosis_cantidad)/pobla*100,digits=1)
-                 )), align = c("l","r")
-    )
-    
-  })
-  
+  # output$resumen_vac <- renderFormattable({
+  #   
+  #   
+  #   pobla <- pobdeptos$poblacion[pobdeptos$nomdep==input$select_depto]
+  #   depto=input$select_depto
+  #   tabla=vacunas %>% filter(jurisdiccion_nombre==depto) %>% arrange(-dosis_total)
+  #   formattable(
+  #     data.frame(`Resumen`=c("Jurisdicción",
+  #                            "Dosis totales aplicadas",
+  #                            "Primeras dosis aplicadas", 
+  #                            "Segundas dosis aplicadas",
+  #                            "Porcentaje de población con una dosis",
+  #                            "Porcentaje de población con dos dosis",
+  #                            "Porcentaje de población con una o dos dosis"),
+  #                Cantidad=c(
+  #                  input$select_depto,
+  #                  sum(tabla$dosis_total),
+  #                  sum(tabla$primera_dosis_cantidad),
+  #                  sum(tabla$segunda_dosis_cantidad),
+  #                  round(sum(tabla$primera_dosis_cantidad-tabla$segunda_dosis_cantidad)/pobla*100,digits=1),
+  #                  round(sum(tabla$segunda_dosis_cantidad)/pobla*100,digits=1),
+  #                  round(sum(tabla$primera_dosis_cantidad)/pobla*100,digits=1)
+  #                )), align = c("l","r")
+  #   )
+  #   
+  # })
+  # 
   output$seleccion <- renderText({
     
     print(input$select_depto)})
