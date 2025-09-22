@@ -20,6 +20,7 @@ library(shinyWidgets)
 library(schoolmath)
 library(geosphere)
 library(htmlwidgets)
+library(shinycssloaders)
 
 load("Data/municipios.RData")
 load("Mapas/Mapas.Rdata")
@@ -75,7 +76,7 @@ ui <- fluidPage(
   br(),
   h2("Resumen de indicadores por departamento"),
   br(),
-  fluidRow(column(12, align="center",htmlOutput("tabla_resumen"))),
+  fluidRow(column(12, align="center",withSpinner(htmlOutput("tabla_resumen")))),
   br(),
   
   hr(),
@@ -151,7 +152,7 @@ ui <- fluidPage(
                          `none-selected-text` = "Departamento"
                        ))),
     column(9,
-           dygraphOutput("grafico1")
+           withSpinner(dygraphOutput("grafico1"))
     )
   ),
   br(),
@@ -223,7 +224,7 @@ ui <- fluidPage(
               )
             )
   ),
-  br(), htmlOutput("html")
+  br(), withSpinner(htmlOutput("html"))
 )
 
 
