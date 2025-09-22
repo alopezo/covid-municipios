@@ -659,7 +659,6 @@ server <- function(input, output, session) {
   })    
   
   output$tabla_resumen <- renderUI({
-    
     vac <- vacunas %>% 
       group_by(jurisdiccion_nombre) %>% 
       summarise(vac=sum(primera_dosis_cantidad),
@@ -693,11 +692,9 @@ server <- function(input, output, session) {
     colnames(datos_res)[7] <- as.character('<SPAN title="Cantidad de habitantes que recibieron dos dosis sobre total de población según proyección INDEC 2020">Pob. vacunada con dos dosis (%)</SPAN>')
     
     
-    
-    
     formatt <- 
       formattable(datos_res, align = c("l",rep("r", NCOL(datos_resumen())+1)), list(
-        `Jurisdicción` = formatter("span", style = ~ style(color = "grey",font.weight = "bold", width=12)),
+        #`Jurisdicción` = formattable::formatter("span", style = ~ style(color = "grey",font.weight = "bold", width=12,)),
         area(col = 2, row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),
         #area(col = c(2:8), row=  1) ~ color_tile("#bdbdbd","#bdbdbd"),
         area(col = 3, row= -1) ~ color_tile("#F7FBFF", "#8dcff2"),     
@@ -707,7 +704,6 @@ server <- function(input, output, session) {
         area(col = 7, row= -1) ~ color_tile("#F7FBFF", "#8dcff2")
         
       )) 
-    
     
     code <- as.character(formatt)
     
