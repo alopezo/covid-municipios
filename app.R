@@ -224,7 +224,7 @@ ui <- fluidPage(
               )
             )
   ),
-  br(), withSpinner(htmlOutput("html"))
+  br(), htmlOutput("html")
 )
 
 
