@@ -211,7 +211,7 @@ ui <- fluidPage(
              choices = c("Diario", "Semana epi",  "Acumulado"),
              status = "primary"
            ),
-           dygraphOutput("graf_vacunas"))),
+          withSpinner(dygraphOutput("graf_vacunas")))),
   br(),
   br(),
   br(),
